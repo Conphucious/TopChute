@@ -1,28 +1,44 @@
-//package io.github.conphucious.topchute.entity;
-//
-//import io.github.conphucious.topchute.model.User;
-//import io.github.conphucious.topchute.model.map.Board;
-//import jakarta.persistence.Entity;
-//import jakarta.persistence.Id;
-//import jakarta.persistence.Table;
-//
-//import java.time.Instant;
-//import java.util.List;
-//
-//@Entity
-//@Table(name = "game")
-//public class GameEntity {
-//
-//    @Id
-//    private String guid;
-//
-//    // Many to Many
-//    private List<UserEntity> userEntityList;
-//
-//    // One to Many
-//    private BoardEntity gameBoard;
-//
-//    private Instant createdAt;
-//
-//    private Instant endedAt;
-//}
+package io.github.conphucious.topchute.entity;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.Instant;
+import java.util.List;
+
+@Getter
+@AllArgsConstructor
+@Entity
+@Table(name = "tc_game")
+public class GameEntity {
+
+    @Id
+    private String guid;
+
+    @ManyToMany
+    @JoinTable(
+            name = "tc_game_users",
+            joinColumns = @JoinColumn(name = "game_guid"),
+            inverseJoinColumns = @JoinColumn(name = "user_phone_number")
+    )
+    private List<UserEntity> users;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "board_id", referencedColumnName = "id")
+    private BoardEntity board;
+
+    @CreationTimestamp
+    private Instant createdAt;
+
+    private Instant endedAt;
+
+}

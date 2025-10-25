@@ -1,6 +1,5 @@
 package io.github.conphucious.topchute.entity;
 
-import io.github.conphucious.topchute.model.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

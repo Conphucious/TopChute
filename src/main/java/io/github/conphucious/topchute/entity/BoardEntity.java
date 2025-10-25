@@ -1,20 +1,23 @@
 package io.github.conphucious.topchute.entity;
 
-import io.github.conphucious.topchute.model.map.BoardPosition;
 import io.github.conphucious.topchute.model.map.BoardType;
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.MapKeyJoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
 
+@Getter
 @Entity
 @Table(name = "tc_board")
 public class BoardEntity {
@@ -25,10 +28,12 @@ public class BoardEntity {
 
     private BoardType boardType;
 
-    @ElementCollection
-    @CollectionTable(name = "tc_player_position", joinColumns = @JoinColumn(name = "id"))
-    @MapKeyColumn(name = "id")
-    @Column(name = "player_position_map")
-    private Map<PlayerEntity, BoardPositionEntity> playerPositionMap;
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "board_id")
+    @MapKeyJoinColumn(name = "player_id")
+    private Map<PlayerEntity, BoardPositionEntity> playerPositionMap = new HashMap<>();
+
+    @CreationTimestamp
+    private Instant createdAt;
 
 }
