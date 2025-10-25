@@ -43,4 +43,17 @@ public class UserService {
         return userRepository.findById(userDto.getPhoneNumber()).isPresent();
     }
 
+    public Optional<User> updateUserName(String phoneNumber, String name) {
+        Optional<UserEntity> userEntity = userRepository.findById(phoneNumber);
+        if (userEntity.isPresent()) {
+            userEntity.get().setName(name);
+            UserEntity modifiedUserEntity = userRepository.save(userEntity.get());
+            return Optional.of(new User(
+                    modifiedUserEntity.getPhoneNumber(),
+                    modifiedUserEntity.getName(),
+                    modifiedUserEntity.getCreatedAt()));
+        }
+        return Optional.empty();
+    }
+
 }

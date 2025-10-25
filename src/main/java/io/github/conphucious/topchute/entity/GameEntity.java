@@ -22,7 +22,7 @@ import java.util.List;
 public class GameEntity {
 
     @Id
-    private String guid;
+    private String uuid;
 
     @ManyToMany
     @JoinTable(

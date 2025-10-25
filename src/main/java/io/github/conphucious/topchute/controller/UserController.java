@@ -1,6 +1,5 @@
 package io.github.conphucious.topchute.controller;
 
-import io.github.conphucious.topchute.UserExistsException;
 import io.github.conphucious.topchute.dto.UserDto;
 import io.github.conphucious.topchute.model.User;
 import io.github.conphucious.topchute.service.UserService;
@@ -13,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -51,6 +51,18 @@ public class UserController {
                 : "User not found for ";
         log.info("{}'{}'", logMsg, phoneNumber);
         return user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.badRequest().build());
+    }
+
+    @PutMapping("/{phoneNumber}")
+    public ResponseEntity<Object> modifyUserName(@Valid @Pattern(regexp = "\\d{10}") @PathVariable String phoneNumber, @RequestBody String name) {
+        Optional<User> user = userService.updateUserName(phoneNumber, name);
+        if (user.isEmpty()) {
+            String msg = "User of PN '" + phoneNumber + "' does not exist for modification";
+            log.info(msg);
+            return ResponseEntity.badRequest().body(msg);
+        }
+
+        return ResponseEntity.ok(user.get());
     }
 
 }
