@@ -13,7 +13,7 @@ import java.util.Map;
 public class Board {
     private final File imgFile; // pop from json
     private final BoardTile[][] boardTile; // populate from json
-    private final Map<Player, Integer[][]> playerPositionMap;
+    private final Map<Player, BoardPosition> playerPositionMap;
     private final Map<User, Player> userPlayerMap;
 
     public Board(List<User> participatingUsers) {
@@ -24,7 +24,7 @@ public class Board {
 
         for (User user : participatingUsers) {
             Player player = new Player(user);
-            playerPositionMap.put(player, new Integer[0][0]);
+            playerPositionMap.put(player, new BoardPosition(0, 0));
             userPlayerMap.put(user, player);
         }
     }

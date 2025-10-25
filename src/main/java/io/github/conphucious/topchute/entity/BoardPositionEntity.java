@@ -1,28 +1,22 @@
 package io.github.conphucious.topchute.entity;
 
-import io.github.conphucious.topchute.model.User;
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.Getter;
 
-import java.time.Instant;
-
+@Getter
 @Entity
-@Table(name = "tc_player")
-public class PlayerEntity {
+@Table(name = "tc_board_position")
+public class BoardPositionEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @ManyToOne
-    private UserEntity user;
+    private int x;
 
-    @Column(name = "time_until_move")
-    private Instant timeUntilPlayerCanMove;
-
+    private int y;
 }
