@@ -13,7 +13,7 @@ import java.util.List;
 @ToString
 @Getter
 @AllArgsConstructor
-public class GameDto {
+public class GameRequestDto {
 
     @NotEmpty
     @Size(min = 2, message = "PN list must contain at least 2 phone numbers.")
