@@ -17,7 +17,7 @@ public class GameRequestDto {
 
     @NotEmpty
     @Size(min = 2, message = "PN list must contain at least 2 phone numbers.")
-    private List<String> phoneNumberList;
+    private List<String> emailAddressList;
 
     @NotNull(message = "Board type cannot be empty.")
     private BoardType boardType;

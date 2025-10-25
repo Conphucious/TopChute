@@ -28,7 +28,7 @@ public class GameEntity {
     @JoinTable(
             name = "tc_game_users",
             joinColumns = @JoinColumn(name = "game_guid"),
-            inverseJoinColumns = @JoinColumn(name = "user_phone_number")
+            inverseJoinColumns = @JoinColumn(name = "user_email_address")
     )
     private List<UserEntity> users;
 

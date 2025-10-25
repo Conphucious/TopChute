@@ -4,6 +4,7 @@ import io.github.conphucious.topchute.dto.UserDto;
 import io.github.conphucious.topchute.model.User;
 import io.github.conphucious.topchute.service.UserService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,21 +44,21 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
-    @GetMapping("/{phoneNumber}")
-    public ResponseEntity<User> fetchUser(@Valid @Pattern(regexp = "\\d{10}") @PathVariable String phoneNumber) {
-        Optional<User> user = userService.fetchUser(phoneNumber);
+    @GetMapping("/{emailAddress}")
+    public ResponseEntity<User> fetchUser(@Valid @Email @PathVariable String emailAddress) {
+        Optional<User> user = userService.fetchUser(emailAddress);
         String logMsg = user.isPresent()
                 ? "User found for "
                 : "User not found for ";
-        log.info("{}'{}'", logMsg, phoneNumber);
+        log.info("{}'{}'", logMsg, emailAddress);
         return user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.badRequest().build());
     }
 
-    @PutMapping("/{phoneNumber}")
-    public ResponseEntity<Object> modifyUserName(@Valid @Pattern(regexp = "\\d{10}") @PathVariable String phoneNumber, @RequestBody String name) {
-        Optional<User> user = userService.updateUserName(phoneNumber, name);
+    @PutMapping("/{emailAddress}")
+    public ResponseEntity<Object> modifyUserName(@Valid @Email @PathVariable String emailAddress, @RequestBody String name) {
+        Optional<User> user = userService.updateUserName(emailAddress, name);
         if (user.isEmpty()) {
-            String msg = "User of PN '" + phoneNumber + "' does not exist for modification";
+            String msg = "User with email '" + emailAddress + "' does not exist for modification";
             log.info(msg);
             return ResponseEntity.badRequest().body(msg);
         }

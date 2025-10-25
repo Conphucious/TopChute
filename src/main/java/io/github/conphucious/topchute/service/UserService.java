@@ -26,34 +26,33 @@ public class UserService {
         log.info("Registering user '{}'", userDto);
         UserEntity userEntity = userRepository.save(
                 UserEntity.builder()
-                        .phoneNumber(userDto.getPhoneNumber())
+                        .emailAddress(userDto.getEmailAddress())
                         .name(userDto.getName())
                         .createdAt(Instant.now())
                         .build());
-        return new User(userEntity.getPhoneNumber(), userEntity.getName(), userEntity.getCreatedAt());
+        return new User(userEntity.getEmailAddress(), userEntity.getName(), userEntity.getCreatedAt());
     }
 
-    public Optional<User> fetchUser(String phoneNumber) {
-        log.info("Fetching user with PN '{}'", phoneNumber);
-        Optional<UserEntity> userEntity = userRepository.findById(phoneNumber);
-        return userEntity.map(entity -> new User(entity.getPhoneNumber(), entity.getName(), entity.getCreatedAt()));
+    public Optional<User> fetchUser(String emailAddress) {
+        log.info("Fetching user with email '{}'", emailAddress);
+        Optional<UserEntity> userEntity = userRepository.findById(emailAddress);
+        return userEntity.map(entity -> new User(entity.getEmailAddress(), entity.getName(), entity.getCreatedAt()));
     }
 
     public boolean isUserRegistered(UserDto userDto) {
-        return userRepository.findById(userDto.getPhoneNumber()).isPresent();
+        return userRepository.findById(userDto.getEmailAddress()).isPresent();
     }
 
-    public Optional<User> updateUserName(String phoneNumber, String name) {
-        Optional<UserEntity> userEntity = userRepository.findById(phoneNumber);
-        if (userEntity.isPresent()) {
-            userEntity.get().setName(name);
-            UserEntity modifiedUserEntity = userRepository.save(userEntity.get());
-            return Optional.of(new User(
-                    modifiedUserEntity.getPhoneNumber(),
-                    modifiedUserEntity.getName(),
-                    modifiedUserEntity.getCreatedAt()));
+    public Optional<User> updateUserName(String emailAddress, String name) {
+        Optional<UserEntity> userEntity = userRepository.findById(emailAddress);
+        if (userEntity.isEmpty()) {
+            return Optional.empty();
         }
-        return Optional.empty();
-    }
+        UserEntity modifiedUserEntity = userEntity.get();
+        modifiedUserEntity.setName(name);
+        return Optional.of(new User(modifiedUserEntity.getEmailAddress(),
+                modifiedUserEntity.getName(),
+                modifiedUserEntity.getCreatedAt()));
 
+    }
 }

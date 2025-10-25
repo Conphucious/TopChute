@@ -2,5 +2,5 @@ package io.github.conphucious.topchute.model;
 
 import java.time.Instant;
 
-public record User(String phoneNumber, String name, Instant createdAt) {
+public record User(String emailAddress, String name, Instant createdAt) {
 }

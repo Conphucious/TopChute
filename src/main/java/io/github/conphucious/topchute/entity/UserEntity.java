@@ -22,7 +22,7 @@ import java.time.Instant;
 public class UserEntity {
 
     @Id
-    private String phoneNumber;
+    private String emailAddress;
 
     @NotEmpty
     private String name;
