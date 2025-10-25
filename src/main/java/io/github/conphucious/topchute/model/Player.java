@@ -8,6 +8,8 @@ import java.time.Instant;
 @Getter
 @Setter
 public class Player {
+
+    //private int id
     private final User user;
     private Instant timeUntilPlayerCanMove;
 
