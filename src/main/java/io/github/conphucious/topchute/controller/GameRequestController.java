@@ -23,6 +23,7 @@ public class GameRequestController {
 
     @PostMapping
     public ResponseEntity<Object> requestGame(@Valid @RequestBody GameRequestDto gameRequestDto) {
+        gameRequestService.inviteToGame(gameRequestDto.getEmailAddressList());
         return ResponseEntity.accepted().body("Game request sent");
     }
 

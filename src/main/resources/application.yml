@@ -14,5 +14,16 @@ spring:
     console:
       enabled: true
       path: /h2-console
-# server:
-#   port: 8080
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: <login user to smtp server>
+    password: <login password to smtp server>
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+        debug:
+          enable: true
