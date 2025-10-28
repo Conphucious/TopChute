@@ -2,10 +2,13 @@ package io.github.conphucious.topchute.service;
 
 import io.github.conphucious.topchute.dto.UserDto;
 import io.github.conphucious.topchute.entity.UserEntity;
+import io.github.conphucious.topchute.model.OtpRequest;
 import io.github.conphucious.topchute.model.User;
 import io.github.conphucious.topchute.repository.UserRepository;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -16,10 +19,14 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final OtpService otpService;
+    private final CacheManager cacheManager;
 
     @Autowired
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, OtpService otpService, CacheManager cacheManager) {
         this.userRepository = userRepository;
+        this.otpService = otpService;
+        this.cacheManager = cacheManager;
     }
 
     public User createUser(UserDto userDto) {
@@ -54,5 +61,36 @@ public class UserService {
                 modifiedUserEntity.getName(),
                 modifiedUserEntity.getCreatedAt()));
 
+    }
+
+    public boolean activateUser(UserDto userDto, int otp) {
+        log.info("Activating user '{}'", userDto);
+        // TODO : Need to include reason and see if evict
+
+        Cache cache = cacheManager.getCache("otpCode");
+        Cache.ValueWrapper valueWrapper = cache.get(userDto.getEmailAddress());
+
+        if (valueWrapper == null) {
+            log.info("No user of type '{}' found for activation in OTP cache.", userDto);
+            return false;
+        }
+
+        log.info("Cache found for user '{}' with values '{}'", userDto, valueWrapper);
+        OtpRequest otpRequest = ((OtpRequest) valueWrapper.get());
+        Instant timeNow = Instant.now();
+        if (otpRequest != null && timeNow.isAfter(otpRequest.getExpiresAt())) {
+            log.info("Cache evicted for '{}' due to expiration of '{}' while time now is '{}'.", userDto.getEmailAddress(), otpRequest.getExpiresAt(), timeNow);
+            return false;
+        }
+
+        boolean isUserOtpValid = otpRequest != null && otpRequest.getOtp() == otp;
+        if (isUserOtpValid) {
+            cache.evict(userDto.getEmailAddress());
+            log.info("User activation OTP successful for '{}'", userDto.getEmailAddress());
+        } else {
+            log.info("User activation OTP failed for '{}'. OTP code did not match!", userDto.getEmailAddress());
+        }
+
+        return isUserOtpValid;
     }
 }

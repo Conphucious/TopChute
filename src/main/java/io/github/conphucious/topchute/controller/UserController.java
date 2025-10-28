@@ -5,7 +5,6 @@ import io.github.conphucious.topchute.model.User;
 import io.github.conphucious.topchute.service.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Pattern;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatusCode;
@@ -31,6 +30,14 @@ public class UserController {
     @Autowired
     public UserController(UserService userService) {
         this.userService = userService;
+    }
+
+    @PostMapping("activate/{otp}")
+    public ResponseEntity<Boolean> activateAccount(@PathVariable int otp, @RequestBody UserDto userDto) {
+        boolean isUserActivated = userService.activateUser(userDto, otp);
+        return isUserActivated
+                ? ResponseEntity.ok(true)
+                : ResponseEntity.internalServerError().body(false);
     }
 
     @PostMapping

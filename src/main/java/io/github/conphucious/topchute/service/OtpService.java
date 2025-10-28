@@ -6,6 +6,8 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -49,11 +51,15 @@ public class OtpService {
         return otpRequest;
     }
 
+    @CachePut(cacheNames = "otpCode", value = "otpCode", key = "#emailAddress")
     public OtpRequest sendRegisterOtp(String emailAddress) {
+        log.info("Sending registration OTP email to '{}'", emailAddress);
+
         // Need to put in content ${HOST}.com/otp/${otp} and have that activate
         OtpRequest otpRequest = generateOtpRequest(emailAddress);
         try {
-            String html = HtmlUtil.getRegisterTemplate(otpRequest.getEmailAddress(), otpRequest.getOtp());
+//            String html = HtmlUtil.getRegisterTemplate(otpRequest.getEmailAddress(), otpRequest.getOtp());
+            String html = HtmlUtil.getOtpTemplate(otpRequest.getEmailAddress(), otpRequest.getOtp());
             sendEmail(otpRequest, "Register to play Top Chute!", html);
             otpRequest.setEmailSentSuccessfully(true);
         } catch (MessagingException e) {
@@ -72,7 +78,9 @@ public class OtpService {
         javaMailSender.send(message);
     }
 
+    @Cacheable(value = "otpCode", key = "#emailAddress")
     private OtpRequest generateOtpRequest(String emailAddress) {
+        log.info("Generating OTP request for '{}'", emailAddress);
         int otp = generateOtp();
         return new OtpRequest(emailAddress, otp, false, Instant.now().plusSeconds(ttlSeconds));
     }
