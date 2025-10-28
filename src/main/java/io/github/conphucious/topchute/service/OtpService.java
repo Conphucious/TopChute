@@ -1,11 +1,14 @@
 package io.github.conphucious.topchute.service;
 
 import io.github.conphucious.topchute.model.OtpRequest;
+import io.github.conphucious.topchute.util.CacheUtil;
 import io.github.conphucious.topchute.util.HtmlUtil;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -24,12 +27,14 @@ public class OtpService {
     private static final SecureRandom secureRandom = new SecureRandom();
 
     private final JavaMailSender javaMailSender;
+    private final CacheManager cacheManager;
     // TODO : register shows different email
 
 
     @Autowired
-    public OtpService(JavaMailSender javaMailSender) {
+    public OtpService(JavaMailSender javaMailSender, CacheManager cacheManager) {
         this.javaMailSender = javaMailSender;
+        this.cacheManager = cacheManager;
     }
 
     public boolean registerUser(String emailAddress) {
@@ -78,8 +83,26 @@ public class OtpService {
         javaMailSender.send(message);
     }
 
-    @Cacheable(value = "otpCode", key = "#emailAddress")
+    @Cacheable(value = CacheUtil.OTP_CODE, key = "#emailAddress")
     private OtpRequest generateOtpRequest(String emailAddress) {
+        // Check if existing code exists for email. If so, evict.
+        Cache cache = cacheManager.getCache(CacheUtil.OTP_CODE);
+        Cache.ValueWrapper valueWrapper = cache.get(emailAddress());
+        if (valueWrapper == null) {
+            log.info("No user of type '{}' found for activation in '{}'.", userDto, CacheUtil.OTP_CODE);
+            return false;
+        }
+        OtpRequest otpRequest = ((OtpRequest) cache.get(emailAddress);
+        Instant timeNow = Instant.now();
+        if (otpRequest != null && timeNow.isAfter(otpRequest.getExpiresAt())) {
+            log.info("Cache evicted for '{}' due to expiration of '{}' while time now is '{}'.", userDto.getEmailAddress(), otpRequest.getExpiresAt(), timeNow);
+            return false;
+        }
+
+        boolean isUserOtpValid = otpRequest != null && otpRequest.getOtp() == otp;
+        if (isUserOtpValid) {
+            cache.evict(userDto.getEmailAddress());
+
         log.info("Generating OTP request for '{}'", emailAddress);
         int otp = generateOtp();
         return new OtpRequest(emailAddress, otp, false, Instant.now().plusSeconds(ttlSeconds));

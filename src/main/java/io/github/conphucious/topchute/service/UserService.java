@@ -5,6 +5,7 @@ import io.github.conphucious.topchute.entity.UserEntity;
 import io.github.conphucious.topchute.model.OtpRequest;
 import io.github.conphucious.topchute.model.User;
 import io.github.conphucious.topchute.repository.UserRepository;
+import io.github.conphucious.topchute.util.CacheUtil;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
@@ -66,24 +67,24 @@ public class UserService {
     public boolean activateUser(UserDto userDto, int otp) {
         log.info("Activating user '{}'", userDto);
         // TODO : Need to include reason and see if evict
-
-        Cache cache = cacheManager.getCache("otpCode");
-        Cache.ValueWrapper valueWrapper = cache.get(userDto.getEmailAddress());
-
-        if (valueWrapper == null) {
-            log.info("No user of type '{}' found for activation in OTP cache.", userDto);
+        Cache cache = cacheManager.getCache(CacheUtil.OTP_CODE);
+        if (cache == null) {
+            log.warn("Cache '{}' is null", CacheUtil.OTP_CODE);
+            return false;
+        }
+        Optional<OtpRequest> otpRequest = CacheUtil.retrieveOtpRequestFromOtpCodeCache(userDto.getEmailAddress(), cache);
+        if (otpRequest.isEmpty()) {
+            log.info("No OTP request found in cache for '{}'", userDto.getEmailAddress());
             return false;
         }
 
-        log.info("Cache found for user '{}' with values '{}'", userDto, valueWrapper);
-        OtpRequest otpRequest = ((OtpRequest) valueWrapper.get());
         Instant timeNow = Instant.now();
-        if (otpRequest != null && timeNow.isAfter(otpRequest.getExpiresAt())) {
+        if (timeNow.isAfter(otpRequest.get().getExpiresAt())) {
             log.info("Cache evicted for '{}' due to expiration of '{}' while time now is '{}'.", userDto.getEmailAddress(), otpRequest.getExpiresAt(), timeNow);
             return false;
         }
 
-        boolean isUserOtpValid = otpRequest != null && otpRequest.getOtp() == otp;
+        boolean isUserOtpValid = otpRequest != null && otpRequest.get().getOtp() == otp;
         if (isUserOtpValid) {
             cache.evict(userDto.getEmailAddress());
             log.info("User activation OTP successful for '{}'", userDto.getEmailAddress());
