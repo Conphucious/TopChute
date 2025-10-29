@@ -86,6 +86,7 @@ public class UserService {
         if (isUserOtpValid) {
             cache.evict(userDto.getEmailAddress());
             log.info("User activation OTP successful for '{}'", userDto.getEmailAddress());
+            userRepository.save(new UserEntity(userDto.getEmailAddress(), userDto.getName()));
             return UserActivationDto.builder()
                     .user(userDto)
                     .otpCode(otp)

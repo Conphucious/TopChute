@@ -1,3 +1,4 @@
+#  spring.jackson.default-property-inclusion = NON_NULL
 spring:
   application:
     name: topchute
@@ -17,8 +18,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: <login user to smtp server>
-    password: <login password to smtp server>
+    username: username
+    password: password
     properties:
       mail:
         smtp:
@@ -27,3 +28,5 @@ spring:
             enable: true
         debug:
           enable: true
+  jackson:
+    default-property-inclusion: NON_NULL
