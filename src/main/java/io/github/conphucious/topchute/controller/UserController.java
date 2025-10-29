@@ -1,5 +1,6 @@
 package io.github.conphucious.topchute.controller;
 
+import io.github.conphucious.topchute.dto.UserActivationDto;
 import io.github.conphucious.topchute.dto.UserDto;
 import io.github.conphucious.topchute.model.User;
 import io.github.conphucious.topchute.service.UserService;
@@ -32,12 +33,12 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping("activate/{otp}")
-    public ResponseEntity<Boolean> activateAccount(@PathVariable int otp, @RequestBody UserDto userDto) {
-        boolean isUserActivated = userService.activateUser(userDto, otp);
-        return isUserActivated
-                ? ResponseEntity.ok(true)
-                : ResponseEntity.internalServerError().body(false);
+    @PostMapping("activation/{otp}")
+    public ResponseEntity<UserActivationDto> activateAccount(@PathVariable int otp, @Valid @RequestBody UserDto userDto) {
+        UserActivationDto userActivationDto = userService.activateUser(userDto, otp);
+        return Optional.ofNullable(userActivationDto.getFailureReason()).isEmpty()
+                ? ResponseEntity.ok(userActivationDto)
+                : ResponseEntity.internalServerError().body(userActivationDto);
     }
 
     @PostMapping

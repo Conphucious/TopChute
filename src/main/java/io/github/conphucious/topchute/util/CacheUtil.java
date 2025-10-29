@@ -12,9 +12,13 @@ import java.util.Optional;
 public class CacheUtil {
     public static final String OTP_CODE = "otpCode";
 
-    public static Optional<OtpRequest> retrieveOtpRequestFromOtpCodeCache(String emailAddress, Cache cache) {
-        Cache.ValueWrapper valueWrapper = cache.get(emailAddress);
+    public static Optional<OtpRequest> retrieveOtpRequestFromOtpCodeCache(Cache cache, String emailAddress) {
+        if (cache == null) {
+            log.warn("Cache '{}' is null", CacheUtil.OTP_CODE);
+            return Optional.empty();
+        }
 
+        Cache.ValueWrapper valueWrapper = cache.get(emailAddress);
         if (valueWrapper == null) {
             log.info("No cache found for '{}' in cache '{}'.", emailAddress, CacheUtil.OTP_CODE);
             return Optional.empty();
@@ -23,6 +27,14 @@ public class CacheUtil {
         log.info("OtpRequest found in cache for '{}'.", emailAddress);
         OtpRequest otpRequest = ((OtpRequest) valueWrapper.get());
         return Optional.ofNullable(otpRequest);
+    }
+
+    public static void evictOtpCodeCache(Cache cache, String key) {
+        Optional<OtpRequest> otpRequest = retrieveOtpRequestFromOtpCodeCache(cache, key);
+        if (otpRequest.isPresent()) {
+            cache.evict(key);
+            log.info("Evicting record for found record '{}'!", key);
+        }
     }
 
 }

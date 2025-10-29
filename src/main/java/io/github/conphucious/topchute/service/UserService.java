@@ -1,7 +1,9 @@
 package io.github.conphucious.topchute.service;
 
+import io.github.conphucious.topchute.dto.UserActivationDto;
 import io.github.conphucious.topchute.dto.UserDto;
 import io.github.conphucious.topchute.entity.UserEntity;
+import io.github.conphucious.topchute.model.ActivationFailureReason;
 import io.github.conphucious.topchute.model.OtpRequest;
 import io.github.conphucious.topchute.model.User;
 import io.github.conphucious.topchute.repository.UserRepository;
@@ -64,34 +66,54 @@ public class UserService {
 
     }
 
-    public boolean activateUser(UserDto userDto, int otp) {
+    public UserActivationDto activateUser(UserDto userDto, int otp) {
         log.info("Activating user '{}'", userDto);
-        // TODO : Need to include reason and see if evict
+
+        // Retrieve from cache
         Cache cache = cacheManager.getCache(CacheUtil.OTP_CODE);
-        if (cache == null) {
-            log.warn("Cache '{}' is null", CacheUtil.OTP_CODE);
-            return false;
-        }
-        Optional<OtpRequest> otpRequest = CacheUtil.retrieveOtpRequestFromOtpCodeCache(userDto.getEmailAddress(), cache);
-        if (otpRequest.isEmpty()) {
-            log.info("No OTP request found in cache for '{}'", userDto.getEmailAddress());
-            return false;
+        Optional<OtpRequest> otpRequest = CacheUtil.retrieveOtpRequestFromOtpCodeCache(cache, userDto.getEmailAddress());
+        Optional<ActivationFailureReason> failureReason = validateFailureReason(cache, otpRequest.orElse(null), userDto.getEmailAddress());
+
+        if (failureReason.isPresent()) {
+            return UserActivationDto.builder()
+                    .user(userDto)
+                    .otpCode(otp)
+                    .failureReason(failureReason.orElse(null))
+                    .build();
         }
 
-        Instant timeNow = Instant.now();
-        if (timeNow.isAfter(otpRequest.get().getExpiresAt())) {
-            log.info("Cache evicted for '{}' due to expiration of '{}' while time now is '{}'.", userDto.getEmailAddress(), otpRequest.getExpiresAt(), timeNow);
-            return false;
-        }
-
-        boolean isUserOtpValid = otpRequest != null && otpRequest.get().getOtp() == otp;
+        boolean isUserOtpValid = otpRequest.get().getOtp() == otp;
         if (isUserOtpValid) {
             cache.evict(userDto.getEmailAddress());
             log.info("User activation OTP successful for '{}'", userDto.getEmailAddress());
-        } else {
-            log.info("User activation OTP failed for '{}'. OTP code did not match!", userDto.getEmailAddress());
+            return UserActivationDto.builder()
+                    .user(userDto)
+                    .otpCode(otp)
+                    .build();
         }
 
-        return isUserOtpValid;
+        log.info("User activation OTP failed for '{}'. OTP code did not match!", userDto.getEmailAddress());
+        return UserActivationDto.builder()
+                .user(userDto)
+                .otpCode(otp)
+                .failureReason(ActivationFailureReason.OTP_CODE_NOT_MATCH)
+                .build();
     }
+
+    private Optional<ActivationFailureReason> validateFailureReason(Cache cache, OtpRequest otpRequest, String emailAddressKey) {
+        Instant timeNow = Instant.now();
+        if (Optional.ofNullable(cache).isEmpty()) {
+            log.info("Nothing exists in the OTP code cache.");
+            return Optional.of(ActivationFailureReason.OTP_CODE_NOT_EXISTS);
+        } else if (otpRequest == null) {
+            log.info("No OTP request found in cache for '{}'", emailAddressKey);
+            return Optional.of(ActivationFailureReason.OTP_CODE_NOT_EXISTS);
+        } else if (timeNow.isAfter(otpRequest.getExpiresAt())) {
+            log.info("OTP expired for '{}' due to expiration time of '{}' while time now is '{}'. Evicting record from cache!",
+                    otpRequest.getEmailAddress(), otpRequest.getExpiresAt(), timeNow);
+            return Optional.of(ActivationFailureReason.OTP_CODE_EXPIRED);
+        }
+        return Optional.empty();
+    }
+
 }

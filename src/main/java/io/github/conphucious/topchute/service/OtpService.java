@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
 import java.time.Instant;
+import java.util.Optional;
 
 @Log4j2
 @Service
@@ -85,23 +86,10 @@ public class OtpService {
 
     @Cacheable(value = CacheUtil.OTP_CODE, key = "#emailAddress")
     private OtpRequest generateOtpRequest(String emailAddress) {
-        // Check if existing code exists for email. If so, evict.
         Cache cache = cacheManager.getCache(CacheUtil.OTP_CODE);
-        Cache.ValueWrapper valueWrapper = cache.get(emailAddress());
-        if (valueWrapper == null) {
-            log.info("No user of type '{}' found for activation in '{}'.", userDto, CacheUtil.OTP_CODE);
-            return false;
+        if (Optional.ofNullable(cache).isPresent()) {
+            CacheUtil.evictOtpCodeCache(cache, emailAddress);
         }
-        OtpRequest otpRequest = ((OtpRequest) cache.get(emailAddress);
-        Instant timeNow = Instant.now();
-        if (otpRequest != null && timeNow.isAfter(otpRequest.getExpiresAt())) {
-            log.info("Cache evicted for '{}' due to expiration of '{}' while time now is '{}'.", userDto.getEmailAddress(), otpRequest.getExpiresAt(), timeNow);
-            return false;
-        }
-
-        boolean isUserOtpValid = otpRequest != null && otpRequest.getOtp() == otp;
-        if (isUserOtpValid) {
-            cache.evict(userDto.getEmailAddress());
 
         log.info("Generating OTP request for '{}'", emailAddress);
         int otp = generateOtp();
