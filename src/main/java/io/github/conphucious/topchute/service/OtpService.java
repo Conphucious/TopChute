@@ -22,9 +22,8 @@ import java.util.Optional;
 @Log4j2
 @Service
 public class OtpService {
-
     // TODO : make this an hour.
-    private static final int ttlSeconds = 60 * 5; // 5 mins
+    private static final int ttlSeconds = 60 * 5 * 3; // 15 mins
     private static final SecureRandom secureRandom = new SecureRandom();
 
     private final JavaMailSender javaMailSender;
@@ -44,7 +43,7 @@ public class OtpService {
 
     //    @CachePut(cacheNames = "otpReqs", key = "emailAddress")
     // TODO : make it so it says "emailAddress sent you an invite to play Top Chute. Click the link here or go to http://asdasd.com/code and enter this OTP: code. This invite expires in 1 hr"
-    public OtpRequest sendGameInviteOtp(String emailAddress) {
+    public OtpRequest sendGameInvite(String emailAddress) {
         OtpRequest otpRequest = generateOtpRequest(emailAddress);
         try {
             String html = HtmlUtil.getOtpTemplate(otpRequest.getEmailAddress(), otpRequest.getOtp());
@@ -58,14 +57,13 @@ public class OtpService {
     }
 
     @CachePut(cacheNames = "otpCode", value = "otpCode", key = "#emailAddress")
-    public OtpRequest sendRegisterOtp(String emailAddress) {
+    public OtpRequest sendRegisterInvite(String emailAddress) {
         log.info("Sending registration OTP email to '{}'", emailAddress);
 
-        // Need to put in content ${HOST}.com/otp/${otp} and have that activate
         OtpRequest otpRequest = generateOtpRequest(emailAddress);
         try {
-//            String html = HtmlUtil.getRegisterTemplate(otpRequest.getEmailAddress(), otpRequest.getOtp());
-            String html = HtmlUtil.getOtpTemplate(otpRequest.getEmailAddress(), otpRequest.getOtp());
+            // TODO : Finish this URL: ${HOST}.com/otp/${otp} and have that activate
+            String html = HtmlUtil.getRegisterTemplate(otpRequest.getEmailAddress(), "http://google.com/");
             sendEmail(otpRequest, "Register to play Top Chute!", html);
             otpRequest.setEmailSentSuccessfully(true);
         } catch (MessagingException e) {
@@ -93,7 +91,11 @@ public class OtpService {
 
         log.info("Generating OTP request for '{}'", emailAddress);
         int otp = generateOtp();
-        return new OtpRequest(emailAddress, otp, false, Instant.now().plusSeconds(ttlSeconds));
+        OtpRequest otpRequest = new OtpRequest(emailAddress, otp, false, Instant.now().plusSeconds(ttlSeconds));
+
+        // TODO : I am creating an async task to evict. Need to test
+        CacheUtil.evictEveryN(cache, emailAddress, ttlSeconds);
+        return otpRequest;
     }
 
     private int generateOtp() {

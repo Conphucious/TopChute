@@ -48,13 +48,13 @@ public class GameRequestService {
 
     public void sendInviteOtp(List<String> emailAddresses) {
         Map<String, Boolean> emailSentSuccessfullyMap = emailAddresses.stream()
-                .map(otpService::sendGameInviteOtp)
+                .map(otpService::sendGameInvite)
                 .collect(Collectors.toMap(OtpRequest::getEmailAddress, OtpRequest::isEmailSentSuccessfully));
     }
 
     public void sendRegisterOtp(List<String> emailAddresses) {
         Map<String, Boolean> emailSentSuccessfullyMap = emailAddresses.stream()
-                .map(otpService::sendRegisterOtp)
+                .map(otpService::sendRegisterInvite)
                 .collect(Collectors.toMap(OtpRequest::getEmailAddress, OtpRequest::isEmailSentSuccessfully));
     }
 
