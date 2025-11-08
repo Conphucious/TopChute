@@ -1,5 +1,6 @@
 package io.github.conphucious.topchute.entity;
 
+import io.github.conphucious.topchute.model.User;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -32,6 +33,10 @@ public class UserEntity {
     public UserEntity(String emailAddress, String name) {
         this.emailAddress = emailAddress;
         this.name = name;
+    }
+
+    public User toUser() {
+        return new User(getEmailAddress(), getName(), getCreatedAt());
     }
 
 }

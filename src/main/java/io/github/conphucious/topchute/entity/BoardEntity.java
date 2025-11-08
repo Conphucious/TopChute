@@ -10,6 +10,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapKeyJoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.Builder;
 import lombok.Getter;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -18,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Getter
+@Builder
 @Entity
 @Table(name = "tc_board")
 public class BoardEntity {

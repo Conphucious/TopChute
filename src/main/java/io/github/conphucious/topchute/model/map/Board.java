@@ -1,5 +1,6 @@
 package io.github.conphucious.topchute.model.map;
 
+import io.github.conphucious.topchute.entity.BoardEntity;
 import io.github.conphucious.topchute.model.Player;
 import io.github.conphucious.topchute.model.User;
 import lombok.Getter;
@@ -15,10 +16,12 @@ public class Board {
     private final BoardTile[][] boardTile; // populate from json
     private final Map<Player, BoardPosition> playerPositionMap;
     private final Map<User, Player> userPlayerMap;
+    private final BoardType boardType;
 
-    public Board(List<User> participatingUsers) {
-        imgFile = new File("");
-        boardTile = new BoardTile[10][6];
+    public Board(BoardType boardType, File imgFile, BoardTile[][] boardTile, List<User> participatingUsers) {
+        this.boardType = boardType;
+        this.imgFile = imgFile;
+        this.boardTile = boardTile;
         playerPositionMap = new HashMap<>();
         userPlayerMap = new HashMap<>();
 
@@ -28,4 +31,13 @@ public class Board {
             userPlayerMap.put(user, player);
         }
     }
+
+    public BoardEntity toEntity() {
+        return BoardEntity
+                .builder()
+                .boardType(getBoardType())
+                .playerPositionMap()
+                .build();
+    }
+
 }

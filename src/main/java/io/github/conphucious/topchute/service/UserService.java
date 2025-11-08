@@ -83,7 +83,7 @@ public class UserService {
         }
 
         boolean isUserOtpValid = otpRequest.get().getOtp() == otp;
-        if (isUserOtpValid) {
+        if (isUserOtpValid && cache != null) {
             cache.evict(userDto.getEmailAddress());
             log.info("User activation OTP successful for '{}'", userDto.getEmailAddress());
             userRepository.save(new UserEntity(userDto.getEmailAddress(), userDto.getName()));
@@ -109,7 +109,7 @@ public class UserService {
         } else if (otpRequest == null) {
             log.info("No OTP request found in cache for '{}'", emailAddressKey);
             return Optional.of(ActivationFailureReason.OTP_CODE_NOT_EXISTS);
-        } else if (timeNow.isAfter(otpRequest.getExpiresAt())) {
+        } else if (timeNow.isAfter(otpRequest.getExpiresAt())) { // TODO : Validate that this is still a case with TTL evict in CacheUtil
             log.info("OTP expired for '{}' due to expiration time of '{}' while time now is '{}'. Evicting record from cache!",
                     otpRequest.getEmailAddress(), otpRequest.getExpiresAt(), timeNow);
             return Optional.of(ActivationFailureReason.OTP_CODE_EXPIRED);
