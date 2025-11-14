@@ -1,6 +1,7 @@
 package io.github.conphucious.topchute.model.map;
 
 import io.github.conphucious.topchute.entity.BoardEntity;
+import io.github.conphucious.topchute.entity.BoardPositionEntity;
 import io.github.conphucious.topchute.model.Player;
 import io.github.conphucious.topchute.model.User;
 import lombok.Getter;
@@ -33,11 +34,13 @@ public class Board {
     }
 
     public BoardEntity toEntity() {
-        return BoardEntity
-                .builder()
-                .boardType(getBoardType())
-                .playerPositionMap()
-                .build();
+        // need to get board
+//        BoardPositionEntity.builder().x(x).y(y).board();
+//        return BoardEntity
+//                .builder()
+//                .boardType(getBoardType())
+//                .playerPositionMap()
+//                .build();
     }
 
 }

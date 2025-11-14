@@ -15,7 +15,6 @@ import lombok.Getter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.Map;
 
 @Getter
@@ -33,9 +32,13 @@ public class BoardEntity {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "board_id")
     @MapKeyJoinColumn(name = "player_id")
-    private Map<PlayerEntity, BoardPositionEntity> playerPositionMap = new HashMap<>();
+    private Map<PlayerEntity, BoardPositionEntity> playerPositionMap;
 
     @CreationTimestamp
     private Instant createdAt;
+
+    public void addPlayerPositionMap(Map<PlayerEntity, BoardPositionEntity> playerPositionMap) {
+        this.playerPositionMap = playerPositionMap;
+    }
 
 }
