@@ -2,7 +2,7 @@ package io.github.conphucious.topchute.controller;
 
 import io.github.conphucious.topchute.dto.UserActivationDto;
 import io.github.conphucious.topchute.dto.UserDto;
-import io.github.conphucious.topchute.model.User;
+import io.github.conphucious.topchute.entity.UserEntity;
 import io.github.conphucious.topchute.service.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
@@ -48,13 +48,13 @@ public class UserController {
             return ResponseEntity.status(HttpStatusCode.valueOf(409)).body("User already exists.");
         }
 
-        User user = userService.createUser(userDto);
+        UserEntity user = userService.createUser(userDto);
         return ResponseEntity.ok(user);
     }
 
     @GetMapping("/{emailAddress}")
-    public ResponseEntity<User> fetchUser(@Valid @Email @PathVariable String emailAddress) {
-        Optional<User> user = userService.fetchUser(emailAddress);
+    public ResponseEntity<UserEntity> fetchUser(@Valid @Email @PathVariable String emailAddress) {
+        Optional<UserEntity> user = userService.fetchUser(emailAddress);
         String logMsg = user.isPresent()
                 ? "User found for "
                 : "User not found for ";
@@ -64,7 +64,7 @@ public class UserController {
 
     @PutMapping("/{emailAddress}")
     public ResponseEntity<Object> modifyUserName(@Valid @Email @PathVariable String emailAddress, @RequestBody String name) {
-        Optional<User> user = userService.updateUserName(emailAddress, name);
+        Optional<UserEntity> user = userService.updateUserName(emailAddress, name);
         if (user.isEmpty()) {
             String msg = "User with email '" + emailAddress + "' does not exist for modification";
             log.info(msg);

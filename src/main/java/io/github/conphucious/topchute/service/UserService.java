@@ -5,7 +5,6 @@ import io.github.conphucious.topchute.dto.UserDto;
 import io.github.conphucious.topchute.entity.UserEntity;
 import io.github.conphucious.topchute.model.ActivationFailureReason;
 import io.github.conphucious.topchute.model.OtpRequest;
-import io.github.conphucious.topchute.model.User;
 import io.github.conphucious.topchute.repository.UserRepository;
 import io.github.conphucious.topchute.util.CacheUtil;
 import lombok.extern.log4j.Log4j2;
@@ -33,21 +32,19 @@ public class UserService {
         this.cacheManager = cacheManager;
     }
 
-    public User createUser(UserDto userDto) {
+    public UserEntity createUser(UserDto userDto) {
         log.info("Registering user '{}'", userDto);
-        UserEntity userEntity = userRepository.save(
+        return userRepository.save(
                 UserEntity.builder()
                         .emailAddress(userDto.getEmailAddress())
                         .name(userDto.getName())
                         .createdAt(Instant.now())
                         .build());
-        return new User(userEntity.getEmailAddress(), userEntity.getName(), userEntity.getCreatedAt());
     }
 
-    public Optional<User> fetchUser(String emailAddress) {
+    public Optional<UserEntity> fetchUser(String emailAddress) {
         log.info("Fetching user with email '{}'", emailAddress);
-        Optional<UserEntity> userEntity = userRepository.findById(emailAddress);
-        return userEntity.map(entity -> new User(entity.getEmailAddress(), entity.getName(), entity.getCreatedAt()));
+        return userRepository.findById(emailAddress);
     }
 
     public List<UserEntity> fetchUsers(List<String> emailAddresses) {
@@ -58,17 +55,14 @@ public class UserService {
         return userRepository.findById(userDto.getEmailAddress()).isPresent();
     }
 
-    public Optional<User> updateUserName(String emailAddress, String name) {
+    public Optional<UserEntity> updateUserName(String emailAddress, String name) {
         Optional<UserEntity> userEntity = userRepository.findById(emailAddress);
         if (userEntity.isEmpty()) {
             return Optional.empty();
         }
         UserEntity modifiedUserEntity = userEntity.get();
         modifiedUserEntity.setName(name);
-        return Optional.of(new User(modifiedUserEntity.getEmailAddress(),
-                modifiedUserEntity.getName(),
-                modifiedUserEntity.getCreatedAt()));
-
+        return Optional.of(userRepository.save(modifiedUserEntity));
     }
 
     public UserActivationDto activateUser(UserDto userDto, int otp) {
