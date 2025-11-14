@@ -1,6 +1,6 @@
 package io.github.conphucious.topchute.dto;
 
-import io.github.conphucious.topchute.model.map.BoardType;
+import io.github.conphucious.topchute.model.BoardType;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;

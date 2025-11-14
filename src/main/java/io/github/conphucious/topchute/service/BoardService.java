@@ -1,41 +1,53 @@
 package io.github.conphucious.topchute.service;
 
 import io.github.conphucious.topchute.entity.BoardEntity;
+import io.github.conphucious.topchute.entity.BoardPositionEntity;
 import io.github.conphucious.topchute.entity.PlayerEntity;
-import io.github.conphucious.topchute.entity.UserEntity;
-import io.github.conphucious.topchute.model.User;
-import io.github.conphucious.topchute.model.map.Board;
-import io.github.conphucious.topchute.model.map.BoardTile;
-import io.github.conphucious.topchute.model.map.BoardType;
+import io.github.conphucious.topchute.model.BoardType;
+import io.github.conphucious.topchute.repository.BoardPositionRepository;
 import io.github.conphucious.topchute.repository.BoardRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class BoardService {
 
     private BoardRepository boardRepository;
+    private BoardPositionRepository boardPositionRepository;
 
     @Autowired
-    public BoardService(BoardRepository boardRepository) {
+    public BoardService(BoardRepository boardRepository, BoardPositionRepository boardPositionRepository) {
         this.boardRepository = boardRepository;
+        this.boardPositionRepository = boardPositionRepository;
     }
 
-    public BoardEntity createBoard(BoardType boardType, List<PlayerEntity> participatingUsers) {
-        BoardEntity.builder().boardType(boardType).playerPositionMap();
-        boardRepository.save()
+    public BoardEntity createBoard(BoardType boardType, List<PlayerEntity> players) {
+        // Persist new BoardPositionEntity.
+        List<BoardPositionEntity> boardPositionList = players.stream()
+                .map(p -> BoardPositionEntity.builder().x(0).y(0).player(p).build())
+                .toList();
+        boardPositionList = boardPositionRepository.saveAll(boardPositionList);
 
-        Board board = null;
-        if (boardType == BoardType.DEFAULT) {
-            File imgFile = new File("");
-            BoardTile[][] boardTile = new BoardTile[10][6];
-            board = new Board(boardType, imgFile, boardTile, participatingUsers);
-        }
+        // Create player position map
+        Map<PlayerEntity, BoardPositionEntity> playerPositionMap = boardPositionList.stream()
+                .collect(Collectors.toMap(BoardPositionEntity::getPlayer, b -> b));
 
+        // Create board entity, add board position to entity.
+        BoardEntity boardEntity = BoardEntity.builder().boardType(boardType).playerPositionMap(playerPositionMap).build();
+        boardPositionList.forEach(bpe -> bpe.addBoard(boardEntity));
+
+        // Save board entity and persist board position repository
+        BoardEntity board = boardRepository.save(boardEntity);
+        boardPositionRepository.saveAll(boardPositionList);
         return board;
+    }
+
+    public BoardEntity getBoardById(int id) {
+        return boardRepository.findById(id).orElse(null);
     }
 
 }

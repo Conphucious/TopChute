@@ -1,15 +1,11 @@
 package io.github.conphucious.topchute.controller;
 
-import io.github.conphucious.topchute.dto.GameActionDto;
-import io.github.conphucious.topchute.dto.UserDto;
-import io.github.conphucious.topchute.model.Game;
+import io.github.conphucious.topchute.entity.GameEntity;
 import io.github.conphucious.topchute.service.GameService;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,9 +21,10 @@ public class GameController {
     }
 
     @PostMapping("/{id}")
-    public ResponseEntity createGame(@PathVariable int id) {
-        gameService.createNewGame(id);
-        return null;
+    public ResponseEntity<GameEntity> createGame(@PathVariable int id) {
+        GameEntity gameEntity = gameService.createNewGame(id);
+        // TODO : get rid of json ignore and tostring on entities and create dto to transfer back to resp
+        return ResponseEntity.ok(gameEntity);
     }
 
 //    Action controller

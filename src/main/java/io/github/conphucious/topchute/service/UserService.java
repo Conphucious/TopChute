@@ -15,6 +15,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 @Log4j2
@@ -47,6 +48,10 @@ public class UserService {
         log.info("Fetching user with email '{}'", emailAddress);
         Optional<UserEntity> userEntity = userRepository.findById(emailAddress);
         return userEntity.map(entity -> new User(entity.getEmailAddress(), entity.getName(), entity.getCreatedAt()));
+    }
+
+    public List<UserEntity> fetchUsers(List<String> emailAddresses) {
+        return userRepository.findAllById(emailAddresses);
     }
 
     public boolean isUserRegistered(UserDto userDto) {

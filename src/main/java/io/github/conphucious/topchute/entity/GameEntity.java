@@ -9,13 +9,17 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
 import java.util.List;
 
 @Getter
+@Builder
+@NoArgsConstructor
 @AllArgsConstructor
 @Entity
 @Table(name = "tc_game")
@@ -28,9 +32,9 @@ public class GameEntity {
     @JoinTable(
             name = "tc_game_users",
             joinColumns = @JoinColumn(name = "game_guid"),
-            inverseJoinColumns = @JoinColumn(name = "user_email_address")
+            inverseJoinColumns = @JoinColumn(name = "player_id")
     )
-    private List<UserEntity> users;
+    private List<PlayerEntity> players;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "board_id", referencedColumnName = "id")

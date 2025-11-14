@@ -1,6 +1,6 @@
 package io.github.conphucious.topchute.entity;
 
-import io.github.conphucious.topchute.model.map.BoardType;
+import io.github.conphucious.topchute.model.BoardType;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -10,8 +10,10 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapKeyJoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
@@ -19,6 +21,8 @@ import java.util.Map;
 
 @Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "tc_board")
 public class BoardEntity {
