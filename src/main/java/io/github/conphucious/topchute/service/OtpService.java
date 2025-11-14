@@ -4,15 +4,12 @@ import io.github.conphucious.topchute.model.OtpRequest;
 import io.github.conphucious.topchute.util.CacheUtil;
 import io.github.conphucious.topchute.util.HtmlUtil;
 import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
@@ -21,19 +18,19 @@ import java.util.Optional;
 
 @Log4j2
 @Service
-public class OtpService {
+public class OtpService { // TODO : separate into email service
     // TODO : make this an hour.
     private static final int ttlSeconds = 60 * 5 * 3; // 15 mins
     private static final SecureRandom secureRandom = new SecureRandom();
 
-    private final JavaMailSender javaMailSender;
+    private final EmailService emailService;
     private final CacheManager cacheManager;
     // TODO : register shows different email
 
 
     @Autowired
-    public OtpService(JavaMailSender javaMailSender, CacheManager cacheManager) {
-        this.javaMailSender = javaMailSender;
+    public OtpService(EmailService emailService, CacheManager cacheManager) {
+        this.emailService = emailService;
         this.cacheManager = cacheManager;
     }
 
@@ -47,7 +44,7 @@ public class OtpService {
         OtpRequest otpRequest = generateOtpRequest(emailAddress);
         try {
             String html = HtmlUtil.getOtpTemplate(otpRequest.getEmailAddress(), otpRequest.getOtp());
-            sendEmail(otpRequest, "One-time passcode", html);
+            emailService.sendEmail(otpRequest, "One-time passcode", html);
             otpRequest.setEmailSentSuccessfully(true);
         } catch (MessagingException e) {
             log.info("Failed to send game invite OTP email to '{}' with msg '{}'", otpRequest.getEmailAddress(), e);
@@ -64,22 +61,13 @@ public class OtpService {
         try {
             // TODO : Finish this URL: ${HOST}.com/otp/${otp} and have that activate
             String html = HtmlUtil.getRegisterTemplate(otpRequest.getEmailAddress(), "http://google.com/");
-            sendEmail(otpRequest, "Register to play Top Chute!", html);
+            emailService.sendEmail(otpRequest, "Register to play Top Chute!", html);
             otpRequest.setEmailSentSuccessfully(true);
         } catch (MessagingException e) {
             log.info("Failed to send register OTP email to '{}' with msg '{}'", otpRequest.getEmailAddress(), e);
             otpRequest.setEmailSentSuccessfully(false);
         }
         return otpRequest;
-    }
-
-    private void sendEmail(OtpRequest otpRequest, String subject, String html) throws MessagingException {
-        MimeMessage message = javaMailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-        helper.setTo(otpRequest.getEmailAddress());
-        helper.setSubject(subject);
-        helper.setText(html, true);
-        javaMailSender.send(message);
     }
 
     @Cacheable(value = CacheUtil.OTP_CODE, key = "#emailAddress")

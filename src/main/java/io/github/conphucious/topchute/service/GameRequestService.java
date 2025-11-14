@@ -29,15 +29,17 @@ public class GameRequestService {
 
         List<String> emailsRegistered = emailAddresses.stream().filter(email -> userRepository.findById(email).isPresent()).toList();
         List<String> emailsNotRegistered = emailAddresses;
+        emailAddresses.removeAll(emailsRegistered);
 
         log.info("ER '{}'\tNER '{}'", emailsRegistered, emailsNotRegistered);
-        emailAddresses.removeAll(emailsRegistered);
 
         // Invite to game to registered users. Incl link
         sendInviteOtp(emailsRegistered);
 
         // Invite to register and join game. Incl link
         sendRegisterOtp(emailsNotRegistered);
+
+        // Create associated ID to create new game with all players.
 
         // Must send out game request to all phone numbers.
         // Must check if user exists.

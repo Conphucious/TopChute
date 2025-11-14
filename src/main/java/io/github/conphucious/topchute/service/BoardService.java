@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -46,8 +47,12 @@ public class BoardService {
         return board;
     }
 
-    public BoardEntity getBoardById(int id) {
-        return boardRepository.findById(id).orElse(null);
+    public Optional<BoardEntity> getBoardById(int id) {
+        return boardRepository.findById(id);
+    }
+
+    public List<BoardEntity> getBoardByIds(List<Integer> ids) {
+        return boardRepository.findAllById(ids);
     }
 
 }
