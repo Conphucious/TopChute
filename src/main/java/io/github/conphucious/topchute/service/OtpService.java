@@ -2,7 +2,6 @@ package io.github.conphucious.topchute.service;
 
 import io.github.conphucious.topchute.model.OtpRequest;
 import io.github.conphucious.topchute.util.CacheUtil;
-import io.github.conphucious.topchute.util.HtmlUtil;
 import jakarta.mail.MessagingException;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,8 +42,7 @@ public class OtpService { // TODO : separate into email service
     public OtpRequest sendGameInvite(String emailAddress) {
         OtpRequest otpRequest = generateOtpRequest(emailAddress);
         try {
-            String html = HtmlUtil.getOtpTemplate(otpRequest.getEmailAddress(), otpRequest.getOtp());
-            emailService.sendEmail(otpRequest, "One-time passcode", html);
+            emailService.sendGameInvite(otpRequest);
             otpRequest.setEmailSentSuccessfully(true);
         } catch (MessagingException e) {
             log.info("Failed to send game invite OTP email to '{}' with msg '{}'", otpRequest.getEmailAddress(), e);
@@ -60,8 +58,7 @@ public class OtpService { // TODO : separate into email service
         OtpRequest otpRequest = generateOtpRequest(emailAddress);
         try {
             // TODO : Finish this URL: ${HOST}.com/otp/${otp} and have that activate
-            String html = HtmlUtil.getRegisterTemplate(otpRequest.getEmailAddress(), "http://google.com/");
-            emailService.sendEmail(otpRequest, "Register to play Top Chute!", html);
+            emailService.sendRegisterInvite(otpRequest);
             otpRequest.setEmailSentSuccessfully(true);
         } catch (MessagingException e) {
             log.info("Failed to send register OTP email to '{}' with msg '{}'", otpRequest.getEmailAddress(), e);

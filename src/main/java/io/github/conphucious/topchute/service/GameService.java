@@ -30,25 +30,5 @@ public class GameService {
         this.gameRepository = gameRepository;
     }
 
-    public GameEntity createNewGame(int id) {
-        // TODO : lookup ID and add all players. Hard coding for now
-        // Look up users
-        List<UserEntity> users = userService.fetchUsers(List.of("9phuc.nguyen6@gmail.com"));
-        List<PlayerEntity> players = playerService.createPlayerEntity(users);
-        BoardEntity board = boardService.createBoard(BoardType.DEFAULT, players);
-
-        String uuid = GenerationUtil.uuid();
-        GameEntity gameEntity = GameEntity.builder()
-                .uuid(uuid)
-                .players(players)
-                .board(board)
-                .createdAt(Instant.now())
-                .build();
-        return gameRepository.save(gameEntity);
-    }
-
-    public boolean isUserAvailableToMove() {
-        return true;
-    }
 
 }
