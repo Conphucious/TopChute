@@ -4,14 +4,11 @@ import io.github.conphucious.topchute.dto.core.GameActionDto;
 import io.github.conphucious.topchute.dto.core.GameActionDtoType;
 import io.github.conphucious.topchute.entity.GameEntity;
 import io.github.conphucious.topchute.entity.PlayerEntity;
-import io.github.conphucious.topchute.model.GameEvent;
-import io.github.conphucious.topchute.model.GameEventType;
 import io.github.conphucious.topchute.model.GameResponse;
 import io.github.conphucious.topchute.model.GameResponseDetail;
 import io.github.conphucious.topchute.model.GameStatus;
 import io.github.conphucious.topchute.repository.GameRepository;
 import io.github.conphucious.topchute.repository.PlayerRepository;
-import io.github.conphucious.topchute.util.GenerationUtil;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -80,7 +77,7 @@ public class GameService {
             return GameResponse.builder().detail(GameResponseDetail.PLAYER_MOVE_COOLDOWN).build();
         }
 
-        return gameEventService.movePlayer(game, player, gameResponse);
+        return gameEventService.performPlayerAction(game, player, gameResponse);
     }
 
     public GameResponse endGame(GameEntity game, GameResponse.GameResponseBuilder gameResponse) {

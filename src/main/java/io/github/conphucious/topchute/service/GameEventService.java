@@ -1,5 +1,6 @@
 package io.github.conphucious.topchute.service;
 
+import io.github.conphucious.topchute.entity.BoardPositionEntity;
 import io.github.conphucious.topchute.entity.GameEntity;
 import io.github.conphucious.topchute.entity.PlayerEntity;
 import io.github.conphucious.topchute.model.GameEvent;
@@ -7,15 +8,26 @@ import io.github.conphucious.topchute.model.GameEventType;
 import io.github.conphucious.topchute.model.GameResponse;
 import io.github.conphucious.topchute.model.GameResponseDetail;
 import io.github.conphucious.topchute.util.GenerationUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.Map;
 
 @Service
 public class GameEventService {
-    public GameResponse movePlayer(GameEntity game, PlayerEntity player, GameResponse.GameResponseBuilder gameResponse) {
+
+    private final GameBoardService gameBoardService;
+
+    @Autowired
+    public GameEventService(GameBoardService gameBoardService) {
+        this.gameBoardService = gameBoardService;
+    }
+
+    public GameResponse performPlayerAction(GameEntity game, PlayerEntity player, GameResponse.GameResponseBuilder gameResponse) {
         // Check if selected for event. Hardcoded to 15% chance for now.
         boolean isRandomlySelectedForEvent = GenerationUtil.isRngSelected(100, 15);
         if (isRandomlySelectedForEvent) {
-            return performEvent(game, gameResponse);
+            return performEvent(game, player, gameResponse);
         }
 
         GameEventType gameEventType = GameEventType.NEUTRAL;
@@ -29,8 +41,9 @@ public class GameEventService {
         return gameResponse.build();
     }
 
+    // TODO : introduce random events where you can teleport around board
     // TODO : get values of RNG from yaml conf
-    private GameResponse performEvent(GameEntity game, GameResponse.GameResponseBuilder gameResponse) {
+    private GameResponse performEvent(GameEntity game, PlayerEntity player, GameResponse.GameResponseBuilder gameResponse) {
         gameResponse.detail(GameResponseDetail.EVENT_TRIGGERED);
 
         // Hardcoded 65 % chance for good event. 35% chance for bad event.
@@ -41,11 +54,10 @@ public class GameEventService {
                 ? GameEventType.GOOD
                 : GameEventType.BAD;
 
-        if (isGoodEvent) {
-            // Perform good event
-        } else {
-            // Perform bad event
-        }
+        // If good, instant move X, if bad instant move back X
+        int spacesToMove = GenerationUtil.generateRandomInt(5);
+
+        // check if end game condition
 
         gameResponse.gameEvent(
                 GameEvent.builder()
@@ -55,5 +67,12 @@ public class GameEventService {
         );
 
         return gameResponse.build();
+    }
+
+    private void movePlayer(GameEntity game, PlayerEntity player, int spacesToMove) {
+        game.getBoard().getBoardType(); // With defined board types, we have certain specs. Certain bad x,y
+
+        // Update player position.
+        Map<PlayerEntity, BoardPositionEntity> playerPositionMap = game.getBoard().getPlayerPositionMap();
     }
 }

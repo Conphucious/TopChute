@@ -47,6 +47,7 @@ public class GameEntity {
     )
     private List<PlayerEntity> players;
 
+    @Getter
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "board_id", referencedColumnName = "id")
     private BoardEntity board;

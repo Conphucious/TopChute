@@ -34,3 +34,4 @@ spring:
     init:
       mode: always
 
+debug: true
