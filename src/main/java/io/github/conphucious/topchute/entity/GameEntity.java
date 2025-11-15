@@ -1,5 +1,6 @@
 package io.github.conphucious.topchute.entity;
 
+import io.github.conphucious.topchute.model.GameStatus;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -12,6 +13,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
@@ -28,6 +30,9 @@ public class GameEntity {
     @Id
     private String uuid;
 
+    @Setter
+    private GameStatus status;
+
     @ManyToMany
     @JoinTable(
             name = "tc_game_users",
@@ -43,6 +48,7 @@ public class GameEntity {
     @CreationTimestamp
     private Instant createdAt;
 
+    @Setter
     private Instant endedAt;
 
 }

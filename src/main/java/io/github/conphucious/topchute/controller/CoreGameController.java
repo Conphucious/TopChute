@@ -1,6 +1,6 @@
 package io.github.conphucious.topchute.controller;
 
-import io.github.conphucious.topchute.dto.GameRequestDto;
+import io.github.conphucious.topchute.dto.core.GameRequestDto;
 import io.github.conphucious.topchute.entity.GameEntity;
 import io.github.conphucious.topchute.service.GameRequestService;
 import jakarta.validation.Valid;

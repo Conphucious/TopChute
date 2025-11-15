@@ -1,4 +1,4 @@
-package io.github.conphucious.topchute.dto;
+package io.github.conphucious.topchute.dto.core;
 
 import io.github.conphucious.topchute.model.BoardType;
 import jakarta.validation.constraints.NotEmpty;
@@ -16,7 +16,7 @@ import java.util.List;
 public class GameRequestDto {
 
     @NotEmpty
-    @Size(min = 2, message = "PN list must contain at least 2 phone numbers.")
+    @Size(min = 2, message = "emailAddressList must contain at least 2 emails addresses.")
     private List<String> emailAddressList;
 
     @NotNull(message = "Board type cannot be empty.")

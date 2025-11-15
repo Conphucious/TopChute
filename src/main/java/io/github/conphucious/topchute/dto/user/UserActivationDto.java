@@ -1,4 +1,4 @@
-package io.github.conphucious.topchute.dto;
+package io.github.conphucious.topchute.dto.user;
 
 import io.github.conphucious.topchute.model.ActivationFailureReason;
 import lombok.Builder;

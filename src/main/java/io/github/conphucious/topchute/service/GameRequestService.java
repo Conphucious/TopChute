@@ -5,6 +5,7 @@ import io.github.conphucious.topchute.entity.GameEntity;
 import io.github.conphucious.topchute.entity.PlayerEntity;
 import io.github.conphucious.topchute.entity.UserEntity;
 import io.github.conphucious.topchute.model.BoardType;
+import io.github.conphucious.topchute.model.GameStatus;
 import io.github.conphucious.topchute.model.OtpRequest;
 import io.github.conphucious.topchute.repository.GameRepository;
 import io.github.conphucious.topchute.repository.UserRepository;
@@ -101,6 +102,7 @@ public class GameRequestService {
         String uuid = GenerationUtil.uuid();
         GameEntity gameEntity = GameEntity.builder()
                 .uuid(uuid)
+                .status(GameStatus.NEW_GAME)
                 .players(players)
                 .board(board)
                 .createdAt(Instant.now())

@@ -1,6 +1,6 @@
 package io.github.conphucious.topchute.controller;
 
-import io.github.conphucious.topchute.dto.GameActionDto;
+import io.github.conphucious.topchute.dto.core.GameActionDto;
 import io.github.conphucious.topchute.entity.GameEntity;
 import io.github.conphucious.topchute.service.GameService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,8 +22,9 @@ public class GameController {
         this.gameService = gameService;
     }
 
-    @PostMapping
-    public ResponseEntity<GameEntity> gameAction(@RequestBody GameActionDto gameActionDto) {
+    @PostMapping("/{uuid}")
+    public ResponseEntity<GameEntity> gameAction(@PathVariable String uuid, @RequestBody GameActionDto gameActionDto) {
+        gameService.action(uuid, gameActionDto);
 //        GameEntity gameEntity = gameService.createNewGame(id);
         // TODO : get rid of json ignore and tostring on entities and create dto to transfer back to resp
         return ResponseEntity.ok().build();

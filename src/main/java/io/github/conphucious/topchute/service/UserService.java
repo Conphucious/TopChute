@@ -1,7 +1,7 @@
 package io.github.conphucious.topchute.service;
 
-import io.github.conphucious.topchute.dto.UserActivationDto;
-import io.github.conphucious.topchute.dto.UserDto;
+import io.github.conphucious.topchute.dto.user.UserActivationDto;
+import io.github.conphucious.topchute.dto.user.UserDto;
 import io.github.conphucious.topchute.entity.UserEntity;
 import io.github.conphucious.topchute.model.ActivationFailureReason;
 import io.github.conphucious.topchute.model.OtpRequest;

@@ -1,7 +1,7 @@
 package io.github.conphucious.topchute.controller;
 
-import io.github.conphucious.topchute.dto.UserActivationDto;
-import io.github.conphucious.topchute.dto.UserDto;
+import io.github.conphucious.topchute.dto.user.UserActivationDto;
+import io.github.conphucious.topchute.dto.user.UserDto;
 import io.github.conphucious.topchute.entity.UserEntity;
 import io.github.conphucious.topchute.service.UserService;
 import jakarta.validation.Valid;
