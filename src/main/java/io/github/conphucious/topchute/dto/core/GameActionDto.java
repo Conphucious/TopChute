@@ -11,7 +11,7 @@ public class GameActionDto {
     private String emailAddress;
 
     @NotNull(message = "Action type cannot be empty.")
-    private GameActionType actionType;
+    private GameActionDtoType actionType;
 
 }
 

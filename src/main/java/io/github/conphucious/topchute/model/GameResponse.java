@@ -12,5 +12,6 @@ public class GameResponse {
 
     private GameEntity gameEntity;
 
+    private GameEvent gameEvent;
 
 }

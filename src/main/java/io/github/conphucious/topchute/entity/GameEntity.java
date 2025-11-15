@@ -7,6 +7,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -32,6 +33,11 @@ public class GameEntity {
 
     @Setter
     private GameStatus status;
+
+    @ManyToOne
+    @JoinColumn(name = "winner_id")
+    @Setter
+    private PlayerEntity winner;
 
     @ManyToMany
     @JoinTable(

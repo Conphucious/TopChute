@@ -1,14 +1,17 @@
 package io.github.conphucious.topchute.service;
 
 import io.github.conphucious.topchute.dto.core.GameActionDto;
-import io.github.conphucious.topchute.dto.core.GameActionType;
+import io.github.conphucious.topchute.dto.core.GameActionDtoType;
 import io.github.conphucious.topchute.entity.GameEntity;
 import io.github.conphucious.topchute.entity.PlayerEntity;
+import io.github.conphucious.topchute.model.GameEvent;
+import io.github.conphucious.topchute.model.GameEventType;
 import io.github.conphucious.topchute.model.GameResponse;
 import io.github.conphucious.topchute.model.GameResponseDetail;
 import io.github.conphucious.topchute.model.GameStatus;
 import io.github.conphucious.topchute.repository.GameRepository;
 import io.github.conphucious.topchute.repository.PlayerRepository;
+import io.github.conphucious.topchute.util.GenerationUtil;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,14 +26,16 @@ public class GameService {
 
     private final GameRepository gameRepository;
     private final PlayerRepository playerRepository;
+    private final GameEventService gameEventService;
 
     @Autowired
-    public GameService(GameRepository gameRepository, PlayerRepository playerRepository) {
+    public GameService(GameRepository gameRepository, PlayerRepository playerRepository, GameEventService gameEventService) {
         this.gameRepository = gameRepository;
         this.playerRepository = playerRepository;
+        this.gameEventService = gameEventService;
     }
 
-    public GameResponse action(String uuid, GameActionDto gameActionDto) {
+    public GameResponse performAction(String uuid, GameActionDto gameActionDto) {
         GameResponse.GameResponseBuilder gameResponse = GameResponse.builder();
         Optional<GameEntity> gameEntity = gameRepository.findById(uuid);
 
@@ -44,13 +49,13 @@ public class GameService {
         gameResponse.gameEntity(game);
 
         // End game
-        if (gameActionDto.getActionType() == GameActionType.END_GAME) {
+        if (gameActionDto.getActionType() == GameActionDtoType.END_GAME) {
             return endGame(game, gameResponse);
         }
 
         // Game is completed
         GameStatus status = game.getStatus();
-        if (GameStatus.isGameEndedStatus(status)) {
+        if (status == GameStatus.COMPLETED) {
             log.warn("Cannot complete game action. Game is '{}' for uuid '{}'", status, uuid);
             return gameResponse.detail(GameResponseDetail.GAME_COMPLETED).build();
         }
@@ -71,22 +76,19 @@ public class GameService {
         Instant timeUntilPlayerCanMove = player.getTimeUntilPlayerCanMove();
         if (timeUntilPlayerCanMove.compareTo(timeNow) >= 0) {
             Duration duration = Duration.between(timeUntilPlayerCanMove, timeNow);
-            log.warn("Player '{}' cannot move yet. Cooldown time remaining for move '{}'", emailAddress, duration);
+            log.warn("Player '{}' cannot move yet. Cooldown time remaining for move '{}.'", emailAddress, duration);
             return GameResponse.builder().detail(GameResponseDetail.PLAYER_MOVE_COOLDOWN).build();
         }
 
-        // do action
-
-        System.out.println(gameEntity);
-
-        return gameResponse.build();
+        return gameEventService.movePlayer(game, player, gameResponse);
     }
 
     public GameResponse endGame(GameEntity game, GameResponse.GameResponseBuilder gameResponse) {
-        game.setEndedAt(Instant.now());
+        Instant timeNow = Instant.now();
+        log.info("Ending game '{}' at {}.", game.getUuid(), timeNow);
+        game.setEndedAt(timeNow);
         game.setStatus(GameStatus.COMPLETED);
-        return gameResponse.build();
+        return gameResponse.detail(GameResponseDetail.ENDING_GAME).build();
     }
-
 
 }
