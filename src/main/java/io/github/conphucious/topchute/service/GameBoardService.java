@@ -70,47 +70,91 @@ public class GameBoardService {
         boolean isOddRow = (playerBoardPosition.getY() % 2 != 0);
         log.info("Player is moving left is '{}'.", isOddRow);
 
-        if (isOddRow) {
-            moveAmount *= -1; // Reverse player direction
-        }
+        // Reverse player direction to left if odd row. First row is 0 (even) always moves right.
+        moveAmount = isOddRow
+                ? moveAmount * -1
+                : moveAmount;
 
         // Calculate new X position
         int playerXPositionNew = playerPositionX + moveAmount;
-        int playerYPositionNew = playerPositionY;
+        log.info("New unadjusted calculated player position is [{},{}] with move amount '{}'.", playerXPositionNew, playerPositionY, moveAmount);
 
-        log.info("New calculated player position is [{},{}] with move amount '{}'.", playerXPositionNew, playerYPositionNew, moveAmount);
 
+        // TODO : need to check if exceeds Y
         // Check if out of bounds and adjust Y accordingly
         int xMax = board.length;
-        if (isOddRow) {
-            if (playerXPositionNew < 0) { // Moving left and needs to go to next floor.
-                log.info("Player exceeded xMax moving left '{}'. Moving to next floor.", xMax);
-                playerYPositionNew += 1;
-                playerXPositionNew = Math.abs(playerXPositionNew);
-            } else if (playerXPositionNew > xMax) { // Moving left and needs to go down a floor.
-                log.info("Player subceeded xMax moving left '{}'. Moving to prior floor.", xMax);
-                int deltaToMoveX = playerXPositionNew - xMax;
-                playerYPositionNew -= 1;
-                playerXPositionNew = deltaToMoveX;
-            }
-        } else {
-            if (playerXPositionNew > xMax) { // Moving right and needs to go to next floor.
-                log.info("Player exceeded xMax moving right '{}'. Moving to next floor.", xMax);
-                int deltaToMoveX = playerXPositionNew - xMax;
-                playerYPositionNew += 1;
-                playerXPositionNew = deltaToMoveX;
-            } else if (playerXPositionNew < 0) { // Moving left and needs to go down a floor.
-                log.info("Player subceeded xMax moving right '{}'. Moving to prior floor.", xMax);
-                int deltaToMoveX = xMax - Math.abs(playerXPositionNew);
-                playerYPositionNew -= 1;
-                playerXPositionNew = deltaToMoveX;
-            }
+        log.info("Checking boundaries on board with xMax,yMax of [{},{}].", xMax, board[0].length);
+        Pair<Integer, Integer> playerCoordinates = isOddRow
+                ? getPlayerCoordinatesOddRow(xMax, playerXPositionNew, playerPositionY)
+                : getPlayerCoordinatesEvenRow(xMax, playerXPositionNew, playerPositionY);
+        log.info("New adjusted calculated position is [{},{}].", playerCoordinates.getFirst(), playerCoordinates.getSecond());
+
+        int yMax = board[0].length;
+        if (isPlayerExceedingCoordinatesY(yMax, playerCoordinates)) {
+            log.info("Player exceeded yMax moving '{}'. Resetting player to prior position [{},{}].",
+                    board[0].length, playerPositionX, playerPositionY);
+            playerCoordinates = Pair.of(playerPositionX, playerPositionY);
         }
 
-        log.info("Player final position is [{},{}].", playerXPositionNew, playerYPositionNew);
+        // Check if reaches edge of board x and y then winner. Need to get exact number to win. Caller will do this.
+        return playerCoordinates;
+    }
 
-        // Check if reaches edge of board x and y then winner. Need to get exact number to win.
-        return Pair.of(playerXPositionNew, playerYPositionNew);
+    /**
+     * If Y is odd then winning X position is 0
+     * If Y is even then winning X position is xMax
+     *
+     * @param boardPositionEntity
+     * @param boardType
+     * @return
+     */
+    public boolean isUserOnWinningTile(BoardPositionEntity boardPositionEntity, BoardType boardType) {
+        int[][] board = getBoardSize(boardType);
+        int xMax = board.length;
+        int yMax = board[0].length;
+        boolean isOdd = yMax % 2 != 0;
+
+        log.info("Checking to see if player at winning tile at position [{},{}] on board with xMax,yMax of [{},{}].",
+                boardPositionEntity.getX(), boardPositionEntity.getY(), xMax, yMax);
+
+        return isOdd
+                ? boardPositionEntity.getX() == 0 && boardPositionEntity.getY() == yMax
+                : boardPositionEntity.getX() == xMax && boardPositionEntity.getY() == yMax;
+    }
+
+    private boolean isPlayerExceedingCoordinatesY(int yMax, Pair<Integer, Integer> playerCoordinates) {
+        return playerCoordinates.getSecond() > yMax;
+    }
+
+    private Pair<Integer, Integer> getPlayerCoordinatesOddRow(int xMax, int playerPositionX, int playerPositionY) {
+        int x = playerPositionX;
+        int y = playerPositionY;
+        if (x < 0) { // Moving left and needs to go to next floor.
+            log.info("Player exceeded xMax moving left '{}'. Moving to next floor.", xMax);
+            x = Math.abs(x);
+            y += 1;
+        } else if (x > xMax) { // Moving left and needs to go down a floor.
+            log.info("Player subceeded xMax moving left '{}'. Moving to prior floor.", xMax);
+            x = y - xMax;
+            y -= 1;
+        }
+        return Pair.of(x, y);
+    }
+
+    private Pair<Integer, Integer> getPlayerCoordinatesEvenRow(int xMax, int playerPositionX, int playerPositionY) {
+        int x = playerPositionX;
+        int y = playerPositionY;
+
+        if (playerPositionX > xMax) { // Moving right and needs to go to next floor.
+            log.info("Player exceeded xMax moving right '{}'. Moving to next floor.", xMax);
+            x = playerPositionX - xMax;
+            y += 1;
+        } else if (playerPositionX < 0) { // Moving left and needs to go down a floor.
+            log.info("Player subceeded xMax moving right '{}'. Moving to prior floor.", xMax);
+            x = xMax - Math.abs(playerPositionX);
+            y -= 1;
+        }
+        return Pair.of(x, y);
     }
 
 }
