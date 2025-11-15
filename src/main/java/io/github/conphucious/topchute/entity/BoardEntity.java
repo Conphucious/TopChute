@@ -14,6 +14,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
@@ -33,6 +34,7 @@ public class BoardEntity {
 
     private BoardType boardType;
 
+    @Setter
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "board_id")
     @MapKeyJoinColumn(name = "player_id")

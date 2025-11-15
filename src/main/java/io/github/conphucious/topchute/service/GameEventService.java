@@ -9,6 +9,7 @@ import io.github.conphucious.topchute.model.GameResponse;
 import io.github.conphucious.topchute.model.GameResponseDetail;
 import io.github.conphucious.topchute.util.GenerationUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -54,11 +55,29 @@ public class GameEventService {
                 ? GameEventType.GOOD
                 : GameEventType.BAD;
 
-        // If good, instant move X, if bad instant move back X
         int spacesToMove = GenerationUtil.generateRandomInt(5);
+        // If good, instant move X, if bad instant move back X
+
+        Pair<Integer, Integer> playerCoordinateNew = gameBoardService.movePlayer(game, player, spacesToMove);
+
+        // Update player position, board, game.
+        Map<PlayerEntity, BoardPositionEntity> playerPositionMap = game.getBoard().getPlayerPositionMap();
+        BoardPositionEntity playerBoardPosition = playerPositionMap.get(player);
+        playerBoardPosition.setX(playerCoordinateNew.getFirst());
+        playerBoardPosition.setY(playerCoordinateNew.getSecond());
+
+        game.getBoard().setPlayerPositionMap(playerPositionMap);
+        boardRepository.save(playerBoardPosition);
+        gameRepository.save(game);
+
+        // add to game response new player coordinates, spaces moved?
+        // Update player position.
+        // Update game
+        // update board
+        // Check win condition
+
 
         // check if end game condition
-
         gameResponse.gameEvent(
                 GameEvent.builder()
                         .gameEventType(gameEventType)
