@@ -95,19 +95,25 @@ public class GameEventService {
     }
 
     private void movePlayerAndCheckWinCondition(GameEntity game, PlayerEntity player, GameResponse.GameResponseBuilder gameResponse) {
+        BoardPositionEntity playerBoardPosition = game.getBoard().getPlayerPositionMap().get(player);
+        Pair<Integer, Integer> playerCoordinateCurrent = Pair.of(playerBoardPosition.getX(), playerBoardPosition.getY());
         GameResponse temp = gameResponse.build();
         log.info("Player '{}' pending action is '{}' moving '{}' spaces",
                 player.getUser().getEmailAddress(), temp.getGameEvent().getBoardAction(), temp.getGameEvent().getMoveAmount());
         Pair<Integer, Integer> playerCoordinateNew = gameBoardService.movePlayer(game, player, temp.getGameEvent().getMoveAmount());
 
-        // TODO : If user is on second to last tile and overmoves and their position resets- then we need to let caller know that happened.
-        // Can check if moved at all and event type. Use Game details.
+        // Player needs to land EXACTLY on winning tile. Else report if they moved past this.
+        boolean hasPlayerMovedPastWinningCondition = temp.getGameEvent().getGameEventType() == GameEventType.MOVEMENT
+                && playerCoordinateCurrent.getFirst().equals(playerCoordinateNew.getFirst())
+                && playerCoordinateCurrent.getSecond().equals(playerCoordinateNew.getSecond());
+        if (hasPlayerMovedPastWinningCondition) {
+            gameResponse.detail(GameResponseDetail.PLAYER_MOVING_OVERFLOW);
+        }
 
         // Update player position, board, game.
         savePlayerMovement(game, player, playerCoordinateNew);
 
         // Check win condition
-        BoardPositionEntity playerBoardPosition = game.getBoard().getPlayerPositionMap().get(player);
         boolean hasPlayerWon = gameBoardService.isUserOnWinningTile(playerBoardPosition, game.getBoard().getBoardType());
         log.info("Player '{}' has won: '{}'", player.getUser().getEmailAddress(), hasPlayerWon);
         if (hasPlayerWon) {

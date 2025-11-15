@@ -25,6 +25,7 @@ public class GameController {
 
     @PostMapping("/{uuid}")
     public ResponseEntity<GameResponse> gameAction(@PathVariable String uuid, @RequestBody GameActionDto gameActionDto) {
+        // Check if game is completed or aborted here.
         GameResponse gameResponse = gameService.performAction(uuid, gameActionDto);
 //        GameEntity gameEntity = gameService.createNewGame(id);
         // TODO : get rid of json ignore and tostring on entities and create dto to transfer back to resp

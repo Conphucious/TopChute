@@ -8,5 +8,6 @@ public enum GameResponseDetail {
     ENDING_GAME,
     EVENT_TRIGGERED,
     PLAYER_MOVING,
-    PLAYER_WON
+    PLAYER_MOVING_OVERFLOW,
+    PLAYER_WON,
 }
