@@ -1,97 +1,139 @@
 package io.github.conphucious.topchute.service;
 
+import io.github.conphucious.topchute.entity.BoardEntity;
 import io.github.conphucious.topchute.entity.BoardPositionEntity;
 import io.github.conphucious.topchute.entity.GameEntity;
 import io.github.conphucious.topchute.entity.PlayerEntity;
+import io.github.conphucious.topchute.model.BoardAction;
 import io.github.conphucious.topchute.model.GameEvent;
 import io.github.conphucious.topchute.model.GameEventType;
 import io.github.conphucious.topchute.model.GameResponse;
 import io.github.conphucious.topchute.model.GameResponseDetail;
+import io.github.conphucious.topchute.model.GameStatus;
+import io.github.conphucious.topchute.repository.BoardRepository;
+import io.github.conphucious.topchute.repository.GameRepository;
 import io.github.conphucious.topchute.util.GenerationUtil;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
+@Log4j2
 @Service
 public class GameEventService {
 
     private final GameBoardService gameBoardService;
+    private final BoardRepository boardRepository;
+    private final GameRepository gameRepository;
 
     @Autowired
-    public GameEventService(GameBoardService gameBoardService) {
+    public GameEventService(GameBoardService gameBoardService, BoardRepository boardRepository, GameRepository gameRepository) {
         this.gameBoardService = gameBoardService;
+        this.boardRepository = boardRepository;
+        this.gameRepository = gameRepository;
     }
 
-    public GameResponse performPlayerAction(GameEntity game, PlayerEntity player, GameResponse.GameResponseBuilder gameResponse) {
+    public GameResponse.GameResponseBuilder performPlayerAction(GameEntity game, PlayerEntity player, GameResponse.GameResponseBuilder gameResponse) {
+        int spacesToMove = GenerationUtil.generateRandomInt(6);
+
         // Check if selected for event. Hardcoded to 15% chance for now.
         boolean isRandomlySelectedForEvent = GenerationUtil.isRngSelected(100, 15);
         if (isRandomlySelectedForEvent) {
-            return performEvent(game, player, gameResponse);
+            return performRngEvent(game, player, gameResponse, spacesToMove);
         }
 
-        GameEventType gameEventType = GameEventType.NEUTRAL;
+        // Neutral event means normal move.
+        GameEvent gameEvent = GameEvent.builder()
+                .boardAction(BoardAction.MOVE_FORWARD)
+                .gameEventType(GameEventType.MOVEMENT)
+                .moveAmount(spacesToMove)
+                .player(player)
+                .build();
+        gameResponse.gameEvent(gameEvent);
+        gameResponse.detail(GameResponseDetail.PLAYER_MOVING);
 
-        // Perform event
-        // Find game x, y boundary.
-        // Move player based on boundary
-        // If at end, end game. Set winner.
-        // If event, do event and set what happened
+        // Move player progressively
+        movePlayerAndCheckWinCondition(game, player, gameResponse);
 
-        return gameResponse.build();
+        return gameResponse;
     }
 
     // TODO : introduce random events where you can teleport around board
     // TODO : get values of RNG from yaml conf
-    private GameResponse performEvent(GameEntity game, PlayerEntity player, GameResponse.GameResponseBuilder gameResponse) {
+    // TODO Generate event details like "So so stopped you. You move back X spaces"
+    private GameResponse.GameResponseBuilder performRngEvent(GameEntity game, PlayerEntity player, GameResponse.GameResponseBuilder gameResponse, int spacesToMove) {
+        log.info("RNG event triggered for player '{}' on game '{}'", player.getUser().getEmailAddress(), game.getUuid());
         gameResponse.detail(GameResponseDetail.EVENT_TRIGGERED);
 
-        // Hardcoded 65 % chance for good event. 35% chance for bad event.
-        boolean isGoodEvent = GenerationUtil.isRngSelected(100, 65);
+        // Hardcoded 65 % chance for moving backwards. 35% chance for not moving at all.
+        boolean isMovingBackwards = GenerationUtil.isRngSelected(100, 65);
+        GameEvent gameEvent = GameEvent.builder()
+                .gameEventType(GameEventType.RNG_EVENT)
+                .boardAction(isMovingBackwards
+                        ? BoardAction.MOVE_BACKWARD
+                        : BoardAction.SKIP_TURN)
+                .moveAmount(isMovingBackwards
+                        ? spacesToMove * -1
+                        : 0)
+                .player(player)
+                .build();
+        gameResponse.gameEvent(gameEvent);
 
-        // Mark what kind of event happened
-        GameEventType gameEventType = isGoodEvent
-                ? GameEventType.GOOD
-                : GameEventType.BAD;
+        // Skip turn
+        if (!isMovingBackwards) {
+            log.info("Player '{}' is skipping turn on game '{}'", player.getUser().getEmailAddress(), game.getUuid());
+            gameResponse.gameEvent(gameEvent);
+            return gameResponse;
+        }
 
-        int spacesToMove = GenerationUtil.generateRandomInt(5);
-        // If good, instant move X, if bad instant move back X
+        // Move player regressively
+        movePlayerAndCheckWinCondition(game, player, gameResponse);
 
-        Pair<Integer, Integer> playerCoordinateNew = gameBoardService.movePlayer(game, player, spacesToMove);
+        return gameResponse;
+    }
+
+    private void movePlayerAndCheckWinCondition(GameEntity game, PlayerEntity player, GameResponse.GameResponseBuilder gameResponse) {
+        GameResponse temp = gameResponse.build();
+        log.info("Player '{}' pending action is '{}' moving '{}' spaces",
+                player.getUser().getEmailAddress(), temp.getGameEvent().getBoardAction(), temp.getGameEvent().getMoveAmount());
+        Pair<Integer, Integer> playerCoordinateNew = gameBoardService.movePlayer(game, player, temp.getGameEvent().getMoveAmount());
+
+        // TODO : If user is on second to last tile and overmoves and their position resets- then we need to let caller know that happened.
+        // Can check if moved at all and event type. Use Game details.
 
         // Update player position, board, game.
+        savePlayerMovement(game, player, playerCoordinateNew);
+
+        // Check win condition
+        BoardPositionEntity playerBoardPosition = game.getBoard().getPlayerPositionMap().get(player);
+        boolean hasPlayerWon = gameBoardService.isUserOnWinningTile(playerBoardPosition, game.getBoard().getBoardType());
+        log.info("Player '{}' has won: '{}'", player.getUser().getEmailAddress(), hasPlayerWon);
+        if (hasPlayerWon) {
+            game.setStatus(GameStatus.COMPLETED);
+            game.setWinner(player);
+            gameRepository.save(game);
+            gameResponse.detail(GameResponseDetail.PLAYER_WON);
+        }
+    }
+
+    private void savePlayerMovement(GameEntity game, PlayerEntity player, Pair<Integer, Integer> playerCoordinateNew) {
         Map<PlayerEntity, BoardPositionEntity> playerPositionMap = game.getBoard().getPlayerPositionMap();
+
+        // Set new player position
         BoardPositionEntity playerBoardPosition = playerPositionMap.get(player);
         playerBoardPosition.setX(playerCoordinateNew.getFirst());
         playerBoardPosition.setY(playerCoordinateNew.getSecond());
 
+        // Save to board
+        BoardEntity board = game.getBoard();
+        board.setPlayerPositionMap(playerPositionMap);
+        boardRepository.save(board);
+
+        // Save to game
         game.getBoard().setPlayerPositionMap(playerPositionMap);
-        boardRepository.save(playerBoardPosition);
         gameRepository.save(game);
-
-        // add to game response new player coordinates, spaces moved?
-        // Update player position.
-        // Update game
-        // update board
-        // Check win condition
-
-
-        // check if end game condition
-        gameResponse.gameEvent(
-                GameEvent.builder()
-                        .gameEventType(gameEventType)
-//                        .boardAction()
-                        .build()
-        );
-
-        return gameResponse.build();
     }
 
-    private void movePlayer(GameEntity game, PlayerEntity player, int spacesToMove) {
-        game.getBoard().getBoardType(); // With defined board types, we have certain specs. Certain bad x,y
-
-        // Update player position.
-        Map<PlayerEntity, BoardPositionEntity> playerPositionMap = game.getBoard().getPlayerPositionMap();
-    }
 }

@@ -32,7 +32,7 @@ public class PlayerService {
     }
 
     private Instant generateNextMoveTime() {
-        return Instant.now().plus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
+        return Instant.now().truncatedTo(ChronoUnit.DAYS);
     }
 
 }

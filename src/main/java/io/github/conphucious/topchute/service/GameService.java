@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 @Log4j2
@@ -70,14 +71,23 @@ public class GameService {
         // Player cannot move because of cooldown
         PlayerEntity player = playerEntity.get();
         Instant timeNow = Instant.now();
-        Instant timeUntilPlayerCanMove = player.getTimeUntilPlayerCanMove();
+//        Instant timeUntilPlayerCanMove = player.getTimeUntilPlayerCanMove();
+
+        Instant timeUntilPlayerCanMove = timeNow.minusSeconds(50000); // FOR DEBUGGING
+
         if (timeUntilPlayerCanMove.compareTo(timeNow) >= 0) {
-            Duration duration = Duration.between(timeUntilPlayerCanMove, timeNow);
+            Duration duration = Duration.between(timeNow, timeUntilPlayerCanMove);
             log.warn("Player '{}' cannot move yet. Cooldown time remaining for move '{}.'", emailAddress, duration);
             return GameResponse.builder().detail(GameResponseDetail.PLAYER_MOVE_COOLDOWN).build();
         }
 
-        return gameEventService.performPlayerAction(game, player, gameResponse);
+        gameResponse = gameEventService.performPlayerAction(game, player, gameResponse);
+
+        // set player cooldown
+        player.setTimeUntilPlayerCanMove(Instant.now().plus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS));
+        playerRepository.save(player);
+
+        return gameResponse.build();
     }
 
     public GameResponse endGame(GameEntity game, GameResponse.GameResponseBuilder gameResponse) {

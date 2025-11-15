@@ -7,4 +7,6 @@ public enum GameResponseDetail {
     PLAYER_MOVE_COOLDOWN,
     ENDING_GAME,
     EVENT_TRIGGERED,
+    PLAYER_MOVING,
+    PLAYER_WON
 }

@@ -18,7 +18,7 @@ public class GameBoardService {
 
     public int[][] determineBoardSize(BoardType boardType) {
         if (boardType == BoardType.DEFAULT) {
-            return new int[10][4];
+            return new int[10][1];
         }
         throw new IllegalArgumentException("Unsupported board type: " + boardType);
     }

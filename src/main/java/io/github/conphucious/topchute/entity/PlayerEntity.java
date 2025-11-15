@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.Instant;
 
@@ -29,6 +30,7 @@ public class PlayerEntity {
     @ManyToOne
     private UserEntity user;
 
+    @Setter
     @Column(name = "time_until_move")
     private Instant timeUntilPlayerCanMove;
 
