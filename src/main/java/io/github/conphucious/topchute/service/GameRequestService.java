@@ -95,7 +95,7 @@ public class GameRequestService {
     public GameEntity createNewGame(int id) {
         // TODO : lookup ID and add all players. Hard coding for now
         // Look up users
-        List<UserEntity> users = userService.fetchUsers(List.of("9phuc.nguyen6@gmail.com"));
+        List<UserEntity> users = userService.fetchUsers(List.of("9phuc.nguyen6@gmail.com", "9phuc.nguyen9@gmail.com"));
         List<PlayerEntity> players = playerService.createPlayerEntity(users);
         BoardEntity board = boardService.createBoard(BoardType.DEFAULT, players);
 

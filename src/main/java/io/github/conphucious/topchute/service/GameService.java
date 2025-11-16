@@ -59,8 +59,10 @@ public class GameService {
 
         // Find user
         String emailAddress = gameActionDto.getEmailAddress();
-        Optional<PlayerEntity> playerEntity = playerRepository.findByUserEmailAddress(emailAddress);
-        // TODO : And where game guid = uuid
+        Optional<PlayerEntity> playerEntity = game.getPlayers()
+                .stream()
+                .filter(p -> p.getUser().getEmailAddress().equals(emailAddress))
+                .findFirst();
 
         // player does not exist or exist in game
         if (playerEntity.isEmpty() || !game.getPlayers().contains(playerEntity.get())) {

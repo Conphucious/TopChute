@@ -39,8 +39,8 @@ public class GameEventService {
     public GameResponse.GameResponseBuilder performPlayerAction(GameEntity game, PlayerEntity player, GameResponse.GameResponseBuilder gameResponse) {
         int spacesToMove = GameUtil.generateRandomInt(6);
 
-        // Check if selected for event. Hardcoded to 15% chance for now.
-        boolean isRandomlySelectedForEvent = GameUtil.isRngSelected(100, 15);
+        // Check if selected for event. Hardcoded to 10% chance for now.
+        boolean isRandomlySelectedForEvent = GameUtil.isRngSelected(100, 10);
         if (isRandomlySelectedForEvent) {
             return performRngEvent(game, player, gameResponse, spacesToMove);
         }
