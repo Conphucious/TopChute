@@ -33,6 +33,11 @@ public class GameService {
         this.gameEventService = gameEventService;
     }
 
+    public boolean isGameCompleted(String uuid) {
+        Optional<GameEntity> gameEntity = gameRepository.findById(uuid);
+        return gameEntity.map(game -> game.getStatus() == GameStatus.COMPLETED).orElse(false);
+    }
+
     public GameResponse performAction(String uuid, GameActionDto gameActionDto) {
         GameResponse.GameResponseBuilder gameResponse = GameResponse.builder();
         Optional<GameEntity> gameEntity = gameRepository.findById(uuid);

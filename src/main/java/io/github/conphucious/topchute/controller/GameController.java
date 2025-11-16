@@ -1,8 +1,8 @@
 package io.github.conphucious.topchute.controller;
 
 import io.github.conphucious.topchute.dto.core.GameActionDto;
-import io.github.conphucious.topchute.entity.GameEntity;
 import io.github.conphucious.topchute.model.GameResponse;
+import io.github.conphucious.topchute.model.GameResponseDetail;
 import io.github.conphucious.topchute.service.GameService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +24,17 @@ public class GameController {
     }
 
     @PostMapping("/{uuid}")
-    public ResponseEntity<GameResponse> gameAction(@PathVariable String uuid, @RequestBody GameActionDto gameActionDto) {
+    public ResponseEntity<GameResponse> performAction(@PathVariable String uuid, @RequestBody GameActionDto gameActionDto) {
+        // Game is already completed. Don't do anything
+        if (gameService.isGameCompleted(uuid)) {
+            return ResponseEntity.badRequest()
+                    .body(GameResponse.builder()
+                            .detail(GameResponseDetail.GAME_COMPLETED)
+                            .build());
+        }
+
+        // TODO : game is aborted
+
         // Check if game is completed or aborted here.
         GameResponse gameResponse = gameService.performAction(uuid, gameActionDto);
 //        GameEntity gameEntity = gameService.createNewGame(id);

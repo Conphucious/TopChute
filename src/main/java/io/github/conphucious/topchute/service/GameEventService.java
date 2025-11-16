@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.Map;
 
 @Log4j2
@@ -119,6 +120,7 @@ public class GameEventService {
         if (hasPlayerWon) {
             game.setStatus(GameStatus.COMPLETED);
             game.setWinner(player);
+            game.setEndedAt(Instant.now());
             gameRepository.save(game);
             gameResponse.detail(GameResponseDetail.PLAYER_WON);
         }
