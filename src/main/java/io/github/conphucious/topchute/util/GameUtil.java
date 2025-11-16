@@ -6,7 +6,7 @@ import java.util.Random;
 import java.util.UUID;
 
 @UtilityClass
-public class GenerationUtil {
+public class GameUtil {
 
     public static String uuid() {
         return String.valueOf(UUID.randomUUID());

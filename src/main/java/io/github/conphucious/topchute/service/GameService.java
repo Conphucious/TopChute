@@ -1,7 +1,6 @@
 package io.github.conphucious.topchute.service;
 
 import io.github.conphucious.topchute.dto.core.GameActionDto;
-import io.github.conphucious.topchute.dto.core.GameActionDtoType;
 import io.github.conphucious.topchute.entity.GameEntity;
 import io.github.conphucious.topchute.entity.PlayerEntity;
 import io.github.conphucious.topchute.model.GameResponse;
@@ -51,11 +50,6 @@ public class GameService {
         GameEntity game = gameEntity.get();
         gameResponse.gameEntity(game);
 
-        // End game
-        if (gameActionDto.getActionType() == GameActionDtoType.END_GAME) {
-            return endGame(game, gameResponse);
-        }
-
         // Game is completed
         GameStatus status = game.getStatus();
         if (status == GameStatus.COMPLETED) {
@@ -96,12 +90,20 @@ public class GameService {
         return gameResponse.build();
     }
 
-    public GameResponse endGame(GameEntity game, GameResponse.GameResponseBuilder gameResponse) {
+    public boolean endGame(String uuid) {
+        Optional<GameEntity> gameEntity = gameRepository.findById(uuid);
+        if (gameEntity.isEmpty()) {
+            log.warn("Game was not found for uuid '{}'", uuid);
+            return false;
+        }
+
         Instant timeNow = Instant.now();
+        GameEntity game = gameEntity.get();
         log.info("Ending game '{}' at {}.", game.getUuid(), timeNow);
         game.setEndedAt(timeNow);
         game.setStatus(GameStatus.COMPLETED);
-        return gameResponse.detail(GameResponseDetail.ENDING_GAME).build();
+        gameRepository.save(game);
+        return true;
     }
 
 }

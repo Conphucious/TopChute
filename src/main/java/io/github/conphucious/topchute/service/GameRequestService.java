@@ -9,7 +9,7 @@ import io.github.conphucious.topchute.model.GameStatus;
 import io.github.conphucious.topchute.model.OtpRequest;
 import io.github.conphucious.topchute.repository.GameRepository;
 import io.github.conphucious.topchute.repository.UserRepository;
-import io.github.conphucious.topchute.util.GenerationUtil;
+import io.github.conphucious.topchute.util.GameUtil;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -99,7 +99,7 @@ public class GameRequestService {
         List<PlayerEntity> players = playerService.createPlayerEntity(users);
         BoardEntity board = boardService.createBoard(BoardType.DEFAULT, players);
 
-        String uuid = GenerationUtil.uuid();
+        String uuid = GameUtil.uuid();
         GameEntity gameEntity = GameEntity.builder()
                 .uuid(uuid)
                 .status(GameStatus.NEW_GAME)

@@ -12,7 +12,7 @@ import io.github.conphucious.topchute.model.GameResponseDetail;
 import io.github.conphucious.topchute.model.GameStatus;
 import io.github.conphucious.topchute.repository.BoardRepository;
 import io.github.conphucious.topchute.repository.GameRepository;
-import io.github.conphucious.topchute.util.GenerationUtil;
+import io.github.conphucious.topchute.util.GameUtil;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
@@ -25,22 +25,22 @@ import java.util.Map;
 @Service
 public class GameEventService {
 
-    private final GameBoardService gameBoardService;
+    private final BoardService boardService;
     private final BoardRepository boardRepository;
     private final GameRepository gameRepository;
 
     @Autowired
-    public GameEventService(GameBoardService gameBoardService, BoardRepository boardRepository, GameRepository gameRepository) {
-        this.gameBoardService = gameBoardService;
+    public GameEventService(BoardService boardService, BoardRepository boardRepository, GameRepository gameRepository) {
+        this.boardService = boardService;
         this.boardRepository = boardRepository;
         this.gameRepository = gameRepository;
     }
 
     public GameResponse.GameResponseBuilder performPlayerAction(GameEntity game, PlayerEntity player, GameResponse.GameResponseBuilder gameResponse) {
-        int spacesToMove = GenerationUtil.generateRandomInt(6);
+        int spacesToMove = GameUtil.generateRandomInt(6);
 
         // Check if selected for event. Hardcoded to 15% chance for now.
-        boolean isRandomlySelectedForEvent = GenerationUtil.isRngSelected(100, 15);
+        boolean isRandomlySelectedForEvent = GameUtil.isRngSelected(100, 15);
         if (isRandomlySelectedForEvent) {
             return performRngEvent(game, player, gameResponse, spacesToMove);
         }
@@ -69,7 +69,7 @@ public class GameEventService {
         gameResponse.detail(GameResponseDetail.EVENT_TRIGGERED);
 
         // Hardcoded 65 % chance for moving backwards. 35% chance for not moving at all.
-        boolean isMovingBackwards = GenerationUtil.isRngSelected(100, 65);
+        boolean isMovingBackwards = GameUtil.isRngSelected(100, 65);
         GameEvent gameEvent = GameEvent.builder()
                 .gameEventType(GameEventType.RNG_EVENT)
                 .boardAction(isMovingBackwards
@@ -101,7 +101,7 @@ public class GameEventService {
         GameResponse temp = gameResponse.build();
         log.info("Player '{}' pending action is '{}' moving '{}' spaces",
                 player.getUser().getEmailAddress(), temp.getGameEvent().getBoardAction(), temp.getGameEvent().getMoveAmount());
-        Pair<Integer, Integer> playerCoordinateNew = gameBoardService.movePlayer(game, player, temp.getGameEvent().getMoveAmount());
+        Pair<Integer, Integer> playerCoordinateNew = boardService.movePlayer(game, player, temp.getGameEvent().getMoveAmount());
 
         // Player needs to land EXACTLY on winning tile. Else report if they moved past this.
         boolean hasPlayerMovedPastWinningCondition = temp.getGameEvent().getGameEventType() == GameEventType.MOVEMENT
@@ -115,7 +115,7 @@ public class GameEventService {
         savePlayerMovement(game, player, playerCoordinateNew);
 
         // Check win condition
-        boolean hasPlayerWon = gameBoardService.isUserOnWinningTile(playerBoardPosition, game.getBoard().getBoardType());
+        boolean hasPlayerWon = boardService.isUserOnWinningTile(playerBoardPosition, game.getBoard().getBoardType());
         log.info("Player '{}' has won: '{}'", player.getUser().getEmailAddress(), hasPlayerWon);
         if (hasPlayerWon) {
             game.setStatus(GameStatus.COMPLETED);

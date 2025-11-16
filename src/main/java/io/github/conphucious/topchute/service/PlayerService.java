@@ -21,18 +21,14 @@ public class PlayerService {
     }
 
     public List<PlayerEntity> createPlayerEntity(List<UserEntity> userEntities) {
-        Instant timeUntilPlayerMove = generateNextMoveTime();
+        Instant initialPlayerMoveCooldownTime = Instant.now().truncatedTo(ChronoUnit.DAYS);
         List<PlayerEntity> playerEntities = userEntities.stream()
                 .map(pe -> PlayerEntity.builder()
                         .user(pe)
-                        .timeUntilPlayerCanMove(generateNextMoveTime())
+                        .timeUntilPlayerCanMove(initialPlayerMoveCooldownTime)
                         .build())
                 .toList();
         return playerRepository.saveAll(playerEntities);
-    }
-
-    private Instant generateNextMoveTime() {
-        return Instant.now().truncatedTo(ChronoUnit.DAYS);
     }
 
 }
